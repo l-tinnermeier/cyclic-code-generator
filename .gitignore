@@ -1,0 +1,9 @@
+# Compiled output
+/bin/
+*.class
+
+# Workspace state
+.metadata/
+
+# macOS files 
+.DS_Store
