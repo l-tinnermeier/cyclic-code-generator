@@ -8,10 +8,12 @@ import javax.swing.JTextField;
 import java.awt.Color;
 import javax.swing.SwingConstants;
 import javax.swing.JButton;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class MainDisplay {
 
-	private JFrame frame;
+	private static JFrame frame;
 	private JTextField textField;
 
     private static JButton bit1Btn;
@@ -26,6 +28,8 @@ public class MainDisplay {
     private static JButton bit10Btn;
     private static JButton bit11Btn;
     private static JButton encodeBtn;
+    
+    private static JTextField enterMsgTxtField;
 
     private static JLabel invalidMsgDisp;
 
@@ -49,21 +53,21 @@ public class MainDisplay {
     }
 
     public MainDisplay() {
-        initialize();
+        initializeMessagePanel();
+        initializeEncodingPanel();
         addFunctionality();
     }
 
-    private void initialize() {
+    private void initializeMessagePanel() {
 
         frame = new JFrame("Cyclic Code Simulator");
         frame.setBounds(100, 100, 1366, 768);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.getContentPane().setLayout(null);
+        frame.getContentPane().setLayout(new CardLayout(0, 0));
 
         JPanel messagePanelDisp = new JPanel();
-        messagePanelDisp.setBounds(0, 0, 1350, 729);
         messagePanelDisp.setLayout(null);
-        frame.getContentPane().add(messagePanelDisp);
+        frame.getContentPane().add(messagePanelDisp, "name_9840094793041");
 
         // Title
         JLabel titleDisp = new JLabel("Cyclic Code Simulator!");
@@ -178,47 +182,11 @@ public class MainDisplay {
         messagePanelDisp.add(encodeBtn);
     }
 
-    private void addFunctionality() {
-
-        enterMsgTxtField.addActionListener(new ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-
-                String input = enterMsgTxtField.getText();
-
-                if (MessageInput.validMessage(input)) {
-
-                    invalidMsgDisp.setText("");
-
-                    for (int i = 0; i < 11; i++) {
-                        messageButtons[i].setText(input.charAt(i) + "");
-                    }
-
-                    encodeBtn.setEnabled(true);
-
-                } else {
-
-                    invalidMsgDisp.setText("Invalid Message - Enter exactly 11 bits (0 or 1)");
-
-                    for (int i = 0; i < 11; i++) {
-                        messageButtons[i].setText("-");
-                    }
-
-                    encodeBtn.setEnabled(false);
-                }
-            }
-        });
-    }
 
 	/**
 	 * Initialize the contents of the frame.
 	 */
-	private void initialize_2() {
-		frame = new JFrame("Cyclic Code Generator");
-		frame.setBounds(100, 100, 1366, 768);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.getContentPane().setLayout(new CardLayout(0, 0));
-		
+	private void initializeEncodingPanel() {
 		JPanel encodePanelDisp = new JPanel();
 		frame.getContentPane().add(encodePanelDisp, "name_293514128711250");
 		encodePanelDisp.setLayout(null);
@@ -276,4 +244,36 @@ public class MainDisplay {
 		titleLbl.setBounds(238, 21, 889, 63);
 		encodePanelDisp.add(titleLbl);
 	}
+	
+    private void addFunctionality() {
+
+        enterMsgTxtField.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+
+                String input = enterMsgTxtField.getText();
+
+                if (MessageInput.validMessage(input)) {
+
+                    invalidMsgDisp.setText("");
+
+                    for (int i = 0; i < 11; i++) {
+                        messageButtons[i].setText(input.charAt(i) + "");
+                    }
+
+                    encodeBtn.setEnabled(true);
+
+                } else {
+
+                    invalidMsgDisp.setText("Invalid Message - Enter exactly 11 bits (0 or 1)");
+
+                    for (int i = 0; i < 11; i++) {
+                        messageButtons[i].setText("-");
+                    }
+
+                    encodeBtn.setEnabled(false);
+                }
+            }
+        });
+    }
 }
