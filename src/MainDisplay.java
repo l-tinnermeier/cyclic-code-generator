@@ -1,41 +1,212 @@
 import java.awt.EventQueue;
-
 import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JLabel;
+import javax.swing.SwingConstants;
+import javax.swing.JTextField;
+import javax.swing.JButton;
+import java.awt.Font;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class MainDisplay {
 
-	private JFrame frame;
+    private static JFrame frame;
+    private static JTextField enterMsgTxtField;
 
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					MainDisplay window = new MainDisplay();
-					window.frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
+    private static JButton bit1Btn;
+    private static JButton bit2Btn;
+    private static JButton bit3Btn;
+    private static JButton bit4Btn;
+    private static JButton bit5Btn;
+    private static JButton bit6Btn;
+    private static JButton bit7Btn;
+    private static JButton bit8Btn;
+    private static JButton bit9Btn;
+    private static JButton bit10Btn;
+    private static JButton bit11Btn;
+    private static JButton encodeBtn;
 
-	/**
-	 * Create the application.
-	 */
-	public MainDisplay() {
-		initialize();
-	}
+    private static JLabel invalidMsgDisp;
 
-	/**
-	 * Initialize the contents of the frame.
-	 */
-	private void initialize() {
-		frame = new JFrame();
-		frame.setBounds(100, 100, 450, 300);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	}
+    public static JButton[] messageButtons = new JButton[11];
 
+    public static void main(String[] args) {
+
+        EventQueue.invokeLater(new Runnable() {
+
+            public void run() {
+
+                try {
+                    MainDisplay window = new MainDisplay();
+                    frame.setVisible(true);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    public MainDisplay() {
+        initialize();
+        addFunctionality();
+    }
+
+    private void initialize() {
+
+        frame = new JFrame("Cyclic Code Simulator");
+        frame.setBounds(100, 100, 1366, 768);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.getContentPane().setLayout(null);
+
+        JPanel messagePanelDisp = new JPanel();
+        messagePanelDisp.setBounds(0, 0, 1350, 729);
+        messagePanelDisp.setLayout(null);
+        frame.getContentPane().add(messagePanelDisp);
+
+        // Title
+        JLabel titleDisp = new JLabel("Cyclic Code Simulator!");
+        titleDisp.setHorizontalAlignment(SwingConstants.CENTER);
+        titleDisp.setFont(new Font("MesloLGLDZ Nerd Font", Font.BOLD, 26));
+        titleDisp.setBounds(378, 25, 609, 80);
+        messagePanelDisp.add(titleDisp);
+
+        // Enter message label
+        JLabel enterMsgLabel = new JLabel("Please enter an 11-bit message:");
+        enterMsgLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        enterMsgLabel.setFont(new Font("MesloLGLDZ Nerd Font", Font.PLAIN, 20));
+        enterMsgLabel.setBounds(378, 120, 609, 50);
+        messagePanelDisp.add(enterMsgLabel);
+
+        // Text field
+        enterMsgTxtField = new JTextField();
+        enterMsgTxtField.setHorizontalAlignment(SwingConstants.CENTER);
+        enterMsgTxtField.setFont(new Font("MesloLGLDZ Nerd Font", Font.BOLD, 20));
+        enterMsgTxtField.setBounds(508, 180, 350, 50);
+        enterMsgTxtField.setColumns(11);
+        messagePanelDisp.add(enterMsgTxtField);
+
+        // Invalid message display
+        invalidMsgDisp = new JLabel("");
+        invalidMsgDisp.setHorizontalAlignment(SwingConstants.CENTER);
+        invalidMsgDisp.setFont(new Font("MesloLGLDZ Nerd Font", Font.BOLD, 16));
+        invalidMsgDisp.setBounds(378, 230, 609, 30);
+        messagePanelDisp.add(invalidMsgDisp);
+
+        // Message bits label
+        JLabel messageBitsLbl = new JLabel("11-bit Message");
+        messageBitsLbl.setHorizontalAlignment(SwingConstants.CENTER);
+        messageBitsLbl.setFont(new Font("MesloLGLDZ Nerd Font", Font.PLAIN, 18));
+        messageBitsLbl.setBounds(378, 270, 609, 40);
+        messagePanelDisp.add(messageBitsLbl);
+
+        // Panel for 11 bits
+        JPanel messageButtonDisp = new JPanel();
+        messageButtonDisp.setBounds(210, 310, 930, 90);
+        messageButtonDisp.setLayout(null);
+        messagePanelDisp.add(messageButtonDisp);
+
+        bit1Btn = new JButton("-");
+        bit1Btn.setBounds(10, 15, 65, 60);
+        messageButtonDisp.add(bit1Btn);
+
+        bit2Btn = new JButton("-");
+        bit2Btn.setBounds(90, 15, 65, 60);
+        messageButtonDisp.add(bit2Btn);
+
+        bit3Btn = new JButton("-");
+        bit3Btn.setBounds(170, 15, 65, 60);
+        messageButtonDisp.add(bit3Btn);
+
+        bit4Btn = new JButton("-");
+        bit4Btn.setBounds(250, 15, 65, 60);
+        messageButtonDisp.add(bit4Btn);
+
+        bit5Btn = new JButton("-");
+        bit5Btn.setBounds(330, 15, 65, 60);
+        messageButtonDisp.add(bit5Btn);
+
+        bit6Btn = new JButton("-");
+        bit6Btn.setBounds(410, 15, 65, 60);
+        messageButtonDisp.add(bit6Btn);
+
+        bit7Btn = new JButton("-");
+        bit7Btn.setBounds(490, 15, 65, 60);
+        messageButtonDisp.add(bit7Btn);
+
+        bit8Btn = new JButton("-");
+        bit8Btn.setBounds(570, 15, 65, 60);
+        messageButtonDisp.add(bit8Btn);
+
+        bit9Btn = new JButton("-");
+        bit9Btn.setBounds(650, 15, 65, 60);
+        messageButtonDisp.add(bit9Btn);
+
+        bit10Btn = new JButton("-");
+        bit10Btn.setBounds(730, 15, 65, 60);
+        messageButtonDisp.add(bit10Btn);
+
+        bit11Btn = new JButton("-");
+        bit11Btn.setBounds(810, 15, 65, 60);
+        messageButtonDisp.add(bit11Btn);
+
+        // Button array
+        messageButtons[0] = bit1Btn;
+        messageButtons[1] = bit2Btn;
+        messageButtons[2] = bit3Btn;
+        messageButtons[3] = bit4Btn;
+        messageButtons[4] = bit5Btn;
+        messageButtons[5] = bit6Btn;
+        messageButtons[6] = bit7Btn;
+        messageButtons[7] = bit8Btn;
+        messageButtons[8] = bit9Btn;
+        messageButtons[9] = bit10Btn;
+        messageButtons[10] = bit11Btn;
+
+        // Display only
+        for (JButton button : messageButtons) {
+            button.setFont(new Font("MesloLGLDZ Nerd Font", Font.BOLD, 20));
+            button.setEnabled(false);
+        }
+
+        // Encode button
+        encodeBtn = new JButton("ENCODE");
+        encodeBtn.setFont(new Font("MesloLGLDZ Nerd Font", Font.BOLD, 18));
+        encodeBtn.setBounds(583, 440, 200, 60);
+        encodeBtn.setEnabled(false);
+        messagePanelDisp.add(encodeBtn);
+    }
+
+    private void addFunctionality() {
+
+        enterMsgTxtField.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+
+                String input = enterMsgTxtField.getText();
+
+                if (MessageInput.validMessage(input)) {
+
+                    invalidMsgDisp.setText("");
+
+                    for (int i = 0; i < 11; i++) {
+                        messageButtons[i].setText(input.charAt(i) + "");
+                    }
+
+                    encodeBtn.setEnabled(true);
+
+                } else {
+
+                    invalidMsgDisp.setText("Invalid Message - Enter exactly 11 bits (0 or 1)");
+
+                    for (int i = 0; i < 11; i++) {
+                        messageButtons[i].setText("-");
+                    }
+
+                    encodeBtn.setEnabled(false);
+                }
+            }
+        });
+    }
 }
