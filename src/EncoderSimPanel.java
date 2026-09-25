@@ -26,13 +26,13 @@ public class EncoderSimPanel extends CircuitPanel {
     private JLabel inputLbl;
     private JLabel feedbackLbl;
 
-    private JLabel r0Lbl;
-    private JLabel r1Lbl;
-    private JLabel r2Lbl;
-    private JLabel r3Lbl;
+    public JLabel r0Lbl;
+    public JLabel r1Lbl;
+    public JLabel r2Lbl;
+    public JLabel r3Lbl;
 
-    private JLabel xor0Lbl;
-    private JLabel xor1Lbl;
+    public JLabel xor0Lbl;
+    public JLabel xor1Lbl;
 
     private JLabel clockLbl;
 
@@ -78,41 +78,7 @@ public class EncoderSimPanel extends CircuitPanel {
         add(feedbackLbl);
 
 
-        r0Lbl = new JLabel("R0 = 0", SwingConstants.CENTER);
-        r0Lbl.setFont(new Font("Arial", Font.BOLD, 16));
-        r0Lbl.setBounds(70, 440, 120, 30);
-        add(r0Lbl);
-
-
-        r1Lbl = new JLabel("R1 = 0", SwingConstants.CENTER);
-        r1Lbl.setFont(new Font("Arial", Font.BOLD, 16));
-        r1Lbl.setBounds(275, 440, 120, 30);
-        add(r1Lbl);
-
-
-        r2Lbl = new JLabel("R2 = 0", SwingConstants.CENTER);
-        r2Lbl.setFont(new Font("Arial", Font.BOLD, 16));
-        r2Lbl.setBounds(480, 440, 120, 30);
-        add(r2Lbl);
-
-
-        xor0Lbl = new JLabel("XOR0", SwingConstants.CENTER);
-        xor0Lbl.setFont(new Font("Arial", Font.BOLD, 16));
-        xor0Lbl.setBounds(650, 440, 120, 30);
-        add(xor0Lbl);
-
-
-        r3Lbl = new JLabel("R3 = 0", SwingConstants.CENTER);
-        r3Lbl.setFont(new Font("Arial", Font.BOLD, 16));
-        r3Lbl.setBounds(800, 440, 120, 30);
-        add(r3Lbl);
-
-
-        xor1Lbl = new JLabel("XOR1", SwingConstants.CENTER);
-        xor1Lbl.setFont(new Font("Arial", Font.BOLD, 16));
-        xor1Lbl.setBounds(950, 440, 120, 30);
-        add(xor1Lbl);
-
+        
 
         clockLbl = new JLabel(
             "Clock 0/11",

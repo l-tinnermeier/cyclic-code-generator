@@ -196,7 +196,7 @@ public class MainDisplay {
 		
 		encoderSimDisp = new EncoderSimPanel();
 		encoderSimDisp.setBackground(new Color(210, 224, 228));
-		encoderSimDisp.setBounds(62, 103, 1241, 571);
+		encoderSimDisp.setBounds(60, 78, 1241, 571);
 		encodePanelDisp.add(encoderSimDisp);
 		encoderSimDisp.setLayout(null);
 		
@@ -221,6 +221,36 @@ public class MainDisplay {
 		lblFastForward.setFont(new Font("Neutraface 2 Text", Font.PLAIN, 12));
 		lblFastForward.setBounds(1142, 108, 90, 16);
 		encoderSimDisp.add(lblFastForward);
+		
+		encoderSimDisp.r0Lbl = new JLabel("R0 = 0");
+		encoderSimDisp.r0Lbl.setFont(new Font("Dialog", Font.BOLD, 16));
+		encoderSimDisp.r0Lbl.setBounds(122, 403, 48, 14);
+		encoderSimDisp.add(encoderSimDisp.r0Lbl);
+		
+		encoderSimDisp.r1Lbl = new JLabel("R1 = 0");
+		encoderSimDisp.r1Lbl.setFont(new Font("Dialog", Font.BOLD, 16));
+		encoderSimDisp.r1Lbl.setBounds(324, 403, 48, 14);
+		encoderSimDisp.add(encoderSimDisp.r1Lbl);
+		
+		encoderSimDisp.r2Lbl = new JLabel("R2 = 0");
+		encoderSimDisp.r2Lbl.setFont(new Font("Dialog", Font.BOLD, 16));
+		encoderSimDisp.r2Lbl.setBounds(524, 403, 48, 14);
+		encoderSimDisp.add(encoderSimDisp.r2Lbl);
+		
+		encoderSimDisp.xor0Lbl = new JLabel("XOR0");
+		encoderSimDisp.xor0Lbl.setFont(new Font("Dialog", Font.BOLD, 16));
+		encoderSimDisp.xor0Lbl.setBounds(667, 403, 48, 14);
+		encoderSimDisp.add(encoderSimDisp.xor0Lbl);
+		
+		encoderSimDisp.r3Lbl = new JLabel("R3 = 0");
+		encoderSimDisp.r3Lbl.setFont(new Font("Dialog", Font.BOLD, 16));
+		encoderSimDisp.r3Lbl.setBounds(805, 403, 48, 14);
+		encoderSimDisp.add(encoderSimDisp.r3Lbl);
+		
+		encoderSimDisp.xor1Lbl = new JLabel("XOR1");
+		encoderSimDisp.xor1Lbl.setFont(new Font("Dialog", Font.BOLD, 16));
+		encoderSimDisp.xor1Lbl.setBounds(950, 406, 48, 14);
+		encoderSimDisp.add(encoderSimDisp.xor1Lbl);
 		
 		JLabel titleLbl = new JLabel("Cyclic Code Generator");
 		titleLbl.setHorizontalAlignment(SwingConstants.CENTER);
@@ -278,7 +308,6 @@ public class MainDisplay {
 	    });
 
 
-	    // ADVANCE BUTTON
 	    advanceBtn.addActionListener(e -> {
 
 	        encoderSimDisp.advanceOneStep();
@@ -286,7 +315,6 @@ public class MainDisplay {
 	    });
 
 
-	    // FAST FORWARD BUTTON
 	    fastForwardBtn.addActionListener(e -> {
 
 	        encoderSimDisp.fastForward();
