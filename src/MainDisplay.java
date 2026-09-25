@@ -27,6 +27,8 @@ public class MainDisplay {
     private static JButton bit10Btn;
     private static JButton bit11Btn;
     private static JButton encodeBtn;
+    private static JButton advanceBtn;
+    private static JButton fastForwardBtn;
     
     private static JTextField enterMsgTxtField;
 
@@ -198,15 +200,15 @@ public class MainDisplay {
 		encodePanelDisp.add(encoderSimDisp);
 		encoderSimDisp.setLayout(null);
 		
-		JButton btnNewButton = new JButton(">");
-		btnNewButton.setFont(new Font("Neutraface 2 Text", Font.BOLD, 40));
-		btnNewButton.setBounds(1040, 6, 90, 90);
-		encoderSimDisp.add(btnNewButton);
+		advanceBtn = new JButton(">");
+		advanceBtn.setFont(new Font("Neutraface 2 Text", Font.BOLD, 40));
+		advanceBtn.setBounds(1040, 6, 90, 90);
+		encoderSimDisp.add(advanceBtn);
 		
-		JButton btnNewButton_1 = new JButton(">>>");
-		btnNewButton_1.setFont(new Font("Neutraface 2 Text", Font.BOLD, 40));
-		btnNewButton_1.setBounds(1142, 6, 90, 90);
-		encoderSimDisp.add(btnNewButton_1);
+		fastForwardBtn = new JButton(">>>");
+		fastForwardBtn.setFont(new Font("Neutraface 2 Text", Font.BOLD, 40));
+		fastForwardBtn.setBounds(1142, 6, 90, 90);
+		encoderSimDisp.add(fastForwardBtn);
 		
 		JLabel adv = new JLabel("Advance 1 Step");
 		adv.setHorizontalAlignment(SwingConstants.CENTER);
@@ -227,31 +229,69 @@ public class MainDisplay {
 		encodePanelDisp.add(titleLbl);
 	}
 	
-    private void addFunctionality() {
+	private void addFunctionality() {
 
-        enterMsgTxtField.addActionListener(new ActionListener() {
+	    enterMsgTxtField.addActionListener(new ActionListener() {
 
-            public void actionPerformed(ActionEvent e) {
-                String input = enterMsgTxtField.getText();
-                if (MessageInput.validMessage(input)) {
-                    invalidMsgDisp.setText("");
-                    for (int i = 0; i < 11; i++) {
-                        messageButtons[i].setText(input.charAt(i) + "");
-                    }
-                    encodeBtn.setEnabled(true);
-                } else {
-                    invalidMsgDisp.setText("Invalid Message - Enter exactly 11 bits (0 or 1)");
-                    for (int i = 0; i < 11; i++) {
-                        messageButtons[i].setText("-");
-                    }
-                    encodeBtn.setEnabled(false);
-                }
-            }
-        });
-        
-        encodeBtn.addActionListener(e -> {
-            CardLayout cards = (CardLayout) frame.getContentPane().getLayout();
-            cards.show(frame.getContentPane(), "name_293514128711250");
-        });
-    }
+	        public void actionPerformed(ActionEvent e) {
+
+	            String input = enterMsgTxtField.getText();
+
+	            if (MessageInput.validMessage(input)) {
+
+	                invalidMsgDisp.setText("");
+
+	                for (int i = 0; i < 11; i++) {
+	                    messageButtons[i].setText(input.charAt(i) + "");
+	                }
+
+	                encodeBtn.setEnabled(true);
+
+	            } else {
+
+	                invalidMsgDisp.setText(
+	                    "Invalid Message - Enter exactly 11 bits (0 or 1)"
+	                );
+
+	                for (int i = 0; i < 11; i++) {
+	                    messageButtons[i].setText("-");
+	                }
+
+	                encodeBtn.setEnabled(false);
+	            }
+	        }
+	    });
+
+
+	    // ENCODE BUTTON
+	    encodeBtn.addActionListener(e -> {
+
+	        encoderSimDisp.startEncoding();
+
+	        CardLayout cards =
+	            (CardLayout) frame.getContentPane().getLayout();
+
+	        cards.show(
+	            frame.getContentPane(),
+	            "name_293514128711250"
+	        );
+	    });
+
+
+	    // ADVANCE BUTTON
+	    advanceBtn.addActionListener(e -> {
+
+	        encoderSimDisp.advanceOneStep();
+
+	    });
+
+
+	    // FAST FORWARD BUTTON
+	    fastForwardBtn.addActionListener(e -> {
+
+	        encoderSimDisp.fastForward();
+
+	    });
+
+	}
 }
