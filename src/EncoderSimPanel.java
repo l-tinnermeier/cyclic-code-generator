@@ -101,7 +101,7 @@ public class EncoderSimPanel extends CircuitPanel {
         );
 
         checkBitsLbl.setBounds(
-            20, 525, 350, 30
+            20, 500, 350, 30
         );
 
         add(checkBitsLbl);
@@ -113,7 +113,7 @@ public class EncoderSimPanel extends CircuitPanel {
         );
 
         codewordLbl.setBounds(
-            700, 525, 500, 30
+            700, 500, 500, 30
         );
 
         add(codewordLbl);
@@ -173,7 +173,7 @@ public class EncoderSimPanel extends CircuitPanel {
 
   
         currentInput =
-            MessageInput.message.charAt(10-clock);
+        	    MessageInput.message.charAt(10 - clock) - '0';
 
 
         int oldR0 = r0;
