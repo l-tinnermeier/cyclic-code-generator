@@ -27,6 +27,8 @@ public class MainDisplay {
     private static JButton bit10Btn;
     private static JButton bit11Btn;
     private static JButton encodeBtn;
+    private static JButton advanceBtn;
+    private static JButton fastForwardBtn;
     
     private static JTextField enterMsgTxtField;
 
@@ -222,19 +224,19 @@ public class MainDisplay {
 		
 		encoderSimDisp = new EncoderSimPanel();
 		encoderSimDisp.setBackground(new Color(210, 224, 228));
-		encoderSimDisp.setBounds(62, 103, 1241, 571);
+		encoderSimDisp.setBounds(60, 78, 1241, 571);
 		encodePanelDisp.add(encoderSimDisp);
 		encoderSimDisp.setLayout(null);
 		
-		JButton btnNewButton = new JButton(">");
-		btnNewButton.setFont(new Font("Neutraface 2 Text", Font.BOLD, 40));
-		btnNewButton.setBounds(1040, 6, 90, 90);
-		encoderSimDisp.add(btnNewButton);
+		advanceBtn = new JButton(">");
+		advanceBtn.setFont(new Font("Neutraface 2 Text", Font.BOLD, 40));
+		advanceBtn.setBounds(1040, 6, 90, 90);
+		encoderSimDisp.add(advanceBtn);
 		
-		JButton btnNewButton_1 = new JButton(">>>");
-		btnNewButton_1.setFont(new Font("Neutraface 2 Text", Font.BOLD, 40));
-		btnNewButton_1.setBounds(1142, 6, 90, 90);
-		encoderSimDisp.add(btnNewButton_1);
+		fastForwardBtn = new JButton(">>>");
+		fastForwardBtn.setFont(new Font("Neutraface 2 Text", Font.BOLD, 40));
+		fastForwardBtn.setBounds(1142, 6, 90, 90);
+		encoderSimDisp.add(fastForwardBtn);
 		
 		JLabel adv = new JLabel("Advance 1 Step");
 		adv.setHorizontalAlignment(SwingConstants.CENTER);
@@ -247,6 +249,36 @@ public class MainDisplay {
 		lblFastForward.setFont(new Font("Neutraface 2 Text", Font.PLAIN, 12));
 		lblFastForward.setBounds(1142, 108, 90, 16);
 		encoderSimDisp.add(lblFastForward);
+		
+		encoderSimDisp.r0Lbl = new JLabel("R0 = 0");
+		encoderSimDisp.r0Lbl.setFont(new Font("Dialog", Font.BOLD, 16));
+		encoderSimDisp.r0Lbl.setBounds(122, 403, 48, 14);
+		encoderSimDisp.add(encoderSimDisp.r0Lbl);
+		
+		encoderSimDisp.r1Lbl = new JLabel("R1 = 0");
+		encoderSimDisp.r1Lbl.setFont(new Font("Dialog", Font.BOLD, 16));
+		encoderSimDisp.r1Lbl.setBounds(324, 403, 48, 14);
+		encoderSimDisp.add(encoderSimDisp.r1Lbl);
+		
+		encoderSimDisp.r2Lbl = new JLabel("R2 = 0");
+		encoderSimDisp.r2Lbl.setFont(new Font("Dialog", Font.BOLD, 16));
+		encoderSimDisp.r2Lbl.setBounds(524, 403, 48, 14);
+		encoderSimDisp.add(encoderSimDisp.r2Lbl);
+		
+		encoderSimDisp.xor0Lbl = new JLabel("XOR0");
+		encoderSimDisp.xor0Lbl.setFont(new Font("Dialog", Font.BOLD, 16));
+		encoderSimDisp.xor0Lbl.setBounds(667, 403, 48, 14);
+		encoderSimDisp.add(encoderSimDisp.xor0Lbl);
+		
+		encoderSimDisp.r3Lbl = new JLabel("R3 = 0");
+		encoderSimDisp.r3Lbl.setFont(new Font("Dialog", Font.BOLD, 16));
+		encoderSimDisp.r3Lbl.setBounds(805, 403, 48, 14);
+		encoderSimDisp.add(encoderSimDisp.r3Lbl);
+		
+		encoderSimDisp.xor1Lbl = new JLabel("XOR1");
+		encoderSimDisp.xor1Lbl.setFont(new Font("Dialog", Font.BOLD, 16));
+		encoderSimDisp.xor1Lbl.setBounds(950, 406, 48, 14);
+		encoderSimDisp.add(encoderSimDisp.xor1Lbl);
 		
 		JLabel titleLbl = new JLabel("Cyclic Code Generator");
 		titleLbl.setHorizontalAlignment(SwingConstants.CENTER);
@@ -427,30 +459,65 @@ public class MainDisplay {
 
         // Attach decoder clock-step and fast-forward logic here when ready.
 
+	    enterMsgTxtField.addActionListener(new ActionListener() {
 
-        enterMsgTxtField.addActionListener(new ActionListener() {
+	        public void actionPerformed(ActionEvent e) {
 
-            public void actionPerformed(ActionEvent e) {
-                String input = enterMsgTxtField.getText();
-                if (MessageInput.validMessage(input)) {
-                    invalidMsgDisp.setText("");
-                    for (int i = 0; i < 11; i++) {
-                        messageButtons[i].setText(input.charAt(i) + "");
-                    }
-                    encodeBtn.setEnabled(true);
-                } else {
-                    invalidMsgDisp.setText("Invalid Message - Enter exactly 11 bits (0 or 1)");
-                    for (int i = 0; i < 11; i++) {
-                        messageButtons[i].setText("-");
-                    }
-                    encodeBtn.setEnabled(false);
-                }
-            }
-        });
-        
-        encodeBtn.addActionListener(e -> {
-            CardLayout cards = (CardLayout) frame.getContentPane().getLayout();
-            cards.show(frame.getContentPane(), "name_293514128711250");
-        });
-    }
+	            String input = enterMsgTxtField.getText();
+
+	            if (MessageInput.validMessage(input)) {
+
+	                invalidMsgDisp.setText("");
+
+	                for (int i = 0; i < 11; i++) {
+	                    messageButtons[i].setText(input.charAt(i) + "");
+	                }
+
+	                encodeBtn.setEnabled(true);
+
+	            } else {
+
+	                invalidMsgDisp.setText(
+	                    "Invalid Message - Enter exactly 11 bits (0 or 1)"
+	                );
+
+	                for (int i = 0; i < 11; i++) {
+	                    messageButtons[i].setText("-");
+	                }
+
+	                encodeBtn.setEnabled(false);
+	            }
+	        }
+	    });
+
+
+	    // ENCODE BUTTON
+	    encodeBtn.addActionListener(e -> {
+
+	        encoderSimDisp.startEncoding();
+
+	        CardLayout cards =
+	            (CardLayout) frame.getContentPane().getLayout();
+
+	        cards.show(
+	            frame.getContentPane(),
+	            "name_293514128711250"
+	        );
+	    });
+
+
+	    advanceBtn.addActionListener(e -> {
+
+	        encoderSimDisp.advanceOneStep();
+
+	    });
+
+
+	    fastForwardBtn.addActionListener(e -> {
+
+	        encoderSimDisp.fastForward();
+
+	    });
+
+	}
 }
