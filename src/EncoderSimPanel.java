@@ -1,302 +1,77 @@
-import java.awt.Font;
-import javax.swing.JLabel;
-import javax.swing.SwingConstants;
-import javax.swing.Timer;
-
-/**
- * Encoder appearance and encoding logic.
- * Generator polynomial: g(x) = x^4 + x^3 + 1
- */
-
+/** LSB-first encoder with a separate combinational preview and clock edge. */
 public class EncoderSimPanel extends CircuitPanel {
-
     private static final long serialVersionUID = 1L;
-
-    private int clock = 0;
-
-    private int r0 = 0;
-    private int r1 = 0;
-    private int r2 = 0;
-    private int r3 = 0;
-
-    private int currentInput = 0;
-    private int feedback = 0;
-
-    private JLabel messageLbl;
-    private JLabel inputLbl;
-    private JLabel feedbackLbl;
-
-    public JLabel r0Lbl;
-    public JLabel r1Lbl;
-    public JLabel r2Lbl;
-    public JLabel r3Lbl;
-
-    public JLabel xor0Lbl;
-    public JLabel xor1Lbl;
-
-    private JLabel clockLbl;
-
-    private JLabel checkBitsLbl;
-    private JLabel codewordLbl;
-
+    private String message = "";
+    private int clock;
+    private int[] registers = new int[4];
+    private int[] pending;
+    private int incoming, feedback, oldR2, oldR3;
 
     public EncoderSimPanel() {
-
-        super(
-            new CircuitElement("R0", ComponentType.REGISTER),
-            new CircuitElement("R1", ComponentType.REGISTER),
-            new CircuitElement("R2", ComponentType.REGISTER),
-            new CircuitElement("XOR0", ComponentType.XOR),
-            new CircuitElement("R3", ComponentType.REGISTER),
-            new CircuitElement("XOR1", ComponentType.XOR)
-        );
-
-        setFeedback("XOR1", 100, "R0", "XOR0");
-
-        setLayout(null);
-
-        createLabels();
+        super(new CircuitElement("R0", ComponentType.REGISTER),
+              new CircuitElement("R1", ComponentType.REGISTER),
+              new CircuitElement("R2", ComponentType.REGISTER),
+              new CircuitElement("XOR0", ComponentType.XOR),
+              new CircuitElement("R3", ComponentType.REGISTER),
+              new CircuitElement("XOR1", ComponentType.XOR));
+        setFeedback("XOR1", 70, "R0", "XOR0");
+        setInputGate("XOR1");
     }
 
-    private void createLabels() {
-
-        messageLbl = new JLabel("Message: -----------");
-        messageLbl.setFont(new Font("Arial", Font.BOLD, 16));
-        messageLbl.setBounds(20, 10, 350, 30);
-        add(messageLbl);
-
-
-        inputLbl = new JLabel("Current Input: -");
-        inputLbl.setFont(new Font("Arial", Font.BOLD, 16));
-        inputLbl.setBounds(20, 40, 300, 30);
-        add(inputLbl);
-
-
-        feedbackLbl = new JLabel("Feedback: -");
-        feedbackLbl.setFont(new Font("Arial", Font.BOLD, 16));
-        feedbackLbl.setBounds(20, 70, 300, 30);
-        add(feedbackLbl);
-
-
-        
-
-        clockLbl = new JLabel(
-            "Clock 0/11",
-            SwingConstants.CENTER
-        );
-
-        clockLbl.setFont(
-            new Font("Arial", Font.BOLD, 20)
-        );
-
-        clockLbl.setBounds(475, 490, 250, 30);
-
-        add(clockLbl);
-
-
-        checkBitsLbl = new JLabel("");
-
-        checkBitsLbl.setFont(
-            new Font("Arial", Font.BOLD, 16)
-        );
-
-        checkBitsLbl.setBounds(
-            20, 500, 350, 30
-        );
-
-        add(checkBitsLbl);
-
-        codewordLbl = new JLabel("");
-
-        codewordLbl.setFont(
-            new Font("Arial", Font.BOLD, 16)
-        );
-
-        codewordLbl.setBounds(
-            700, 500, 500, 30
-        );
-
-        add(codewordLbl);
-    }
-
-
-    public void startEncoding() {
-
+    public void startEncoding() { startEncoding(MessageInput.message); }
+    public void startEncoding(String value) {
+        if (value == null || !value.matches("[01]{11}"))
+            throw new IllegalArgumentException("Enter exactly 11 binary digits");
+        message = value;
         clock = 0;
-
-        r0 = 0;
-        r1 = 0;
-        r2 = 0;
-        r3 = 0;
-
-        currentInput = 0;
-        feedback = 0;
-
+        registers = new int[4];
+        pending = null;
+        incoming = feedback = oldR2 = oldR3 = 0;
         resetState();
-       
-        messageLbl.setText(
-            "Message: " + MessageInput.message
-        );
-
-        inputLbl.setText(
-            "Current Input: -"
-        );
-
-        feedbackLbl.setText(
-            "Feedback: -"
-        );
-
-        clockLbl.setText(
-            "Clock 0/11"
-        );
-
-        checkBitsLbl.setText("");
-
-        codewordLbl.setText("");
-
-        updateRegisterLabels();
-
-        repaint();
+        refreshDrawing();
     }
 
+    public void prepareNext() {
+        if (message.isEmpty() || isFinished() || pending != null) return;
+        incoming = message.charAt(10 - clock) - '0';
+        oldR2 = registers[2]; oldR3 = registers[3];
+        feedback = incoming ^ oldR3;
+        pending = new int[] {feedback, registers[0], registers[1], oldR2 ^ feedback};
+        refreshDrawing();
+    }
 
-    public void advanceOneStep() {
-
-        // Make sure we have an 11-bit message
-        if (MessageInput.message.length() != 11) {
-            return;
-        }
-
-        if (clock >= 11) {
-            return;
-        }
-
-  
-        currentInput =
-        	    MessageInput.message.charAt(10 - clock) - '0';
-
-
-        int oldR0 = r0;
-        int oldR1 = r1;
-        int oldR2 = r2;
-        int oldR3 = r3;
-
-
-        // =================================================
-        // g(x) = x^4 + x^3 + 1
-        // =================================================
-
-        // Feedback is current input XOR last register
-        feedback = currentInput ^ oldR3;
-
-
-        r0 = feedback;
-
-        r1 = oldR0;
-
-        r2 = oldR1;
-
-        r3 = oldR2 ^ feedback;
-
-
+    public void commitNext() {
+        if (pending == null) return;
+        registers = pending;
+        pending = null;
         clock++;
-
-        inputLbl.setText(
-            "Current Input: " + currentInput
-        );
-
-        feedbackLbl.setText(
-            "Feedback: " + feedback
-        );
-
-        clockLbl.setText(
-            "Clock " + clock + "/11"
-        );
-
-        updateRegisterLabels();
-
-
-        if (clock == 11) {
-
-            showFinalResult();
-        }
-
-        repaint();
+        refreshDrawing();
     }
 
-
-    public void fastForward() {
-
-        if (MessageInput.message.length() != 11) {
-            return;
-        }
-        
-        Timer timer = new Timer(455, null);
-
-        timer.addActionListener(e -> {
-        if (clock < 11) {
-
-            advanceOneStep();
-        }
-        
-        if(clock >= 11) {
-        	timer.stop();
-        }
-    });
-    
-    timer.start();
-}
-
-
-    private void updateRegisterLabels() {
-    	
-    	r0Lbl.setText("R0 = " + r0);
-        r1Lbl.setText("R1 = " + r1);
-        r2Lbl.setText("R2 = " + r2);
-        r3Lbl.setText("R3 = " + r3);
-        
-        setBit("R0", r0);
-        setBit("R1", r1);
-        setBit("R2", r2);
-        setBit("R3", r3);
-
-        setBit("XOR0", feedback);
-        setBit("XOR1", feedback);
-    }
-      
-
-    private void showFinalResult() {
-
-        checkBitsLbl.setText(
-            "Check Bits: " + getCheckBits()
-        );
-
-        codewordLbl.setText(
-            "15-bit Codeword: " + getCodeword()
-        );
-    }
-
-
+    /** One full hardware clock for tests or non-interactive callers. */
+    public void advanceOneStep() { prepareNext(); commitNext(); }
+    public boolean hasPreview() { return pending != null; }
+    public boolean isFinished() { return !message.isEmpty() && clock == 11; }
+    public int getClock() { return clock; }
+    public String getMessage() { return message; }
+    public int[] getRegisters() { return registers.clone(); }
     public String getCheckBits() {
-
-        return "" + r3 + r2 + r1 + r0;
+        if (!isFinished()) throw new IllegalStateException("Complete all 11 clocks first");
+        return "" + registers[0] + registers[1] + registers[2] + registers[3];
     }
-
-
-    public String getCodeword() {
-
-        return MessageInput.message + getCheckBits();
+    public String getCodeword() { return getCheckBits() + message; }
+    public String getCalculations() {
+        if (clock == 0 && pending == null) return "Registers hold 0. Follow the signals to calculate their next values.";
+        return "Input " + incoming + " XOR old R3 " + oldR3 + " = " + feedback
+             + "     |     Old R2 " + oldR2 + " XOR feedback " + feedback + " = " + (oldR2 ^ feedback);
     }
-
-
-    public boolean isFinished() {
-
-        return clock == 11;
-    }
-
-
-    public int getClock() {
-
-        return clock;
+    private void refreshDrawing() {
+        for (int i = 0; i < 4; i++) setBit("R" + i, registers[i]);
+        setBit("XOR0", oldR2 ^ feedback);
+        setBit("XOR1", feedback);
+        setPreview(pending, incoming, feedback,
+                incoming + " ⊕ " + oldR3 + " = " + feedback,
+                oldR2 + " ⊕ " + feedback + " = " + (oldR2 ^ feedback), "XOR1", "XOR0");
+        if (pending == null) clearPreview();
     }
 }

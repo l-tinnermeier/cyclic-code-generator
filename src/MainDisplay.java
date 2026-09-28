@@ -1,523 +1,301 @@
-import java.awt.EventQueue;
-import javax.swing.JFrame;
-import java.awt.CardLayout;
-import javax.swing.JPanel;
-import javax.swing.JLabel;
-import java.awt.Font;
-import javax.swing.JTextField;
-import java.awt.Color;
-import javax.swing.SwingConstants;
-import javax.swing.JButton;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
+import java.awt.*;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 
+/** All screen construction lives in its own initialize...Panel method. */
 public class MainDisplay {
-
-	private static JFrame frame;
-
-    private static JButton bit1Btn;
-    private static JButton bit2Btn;
-    private static JButton bit3Btn;
-    private static JButton bit4Btn;
-    private static JButton bit5Btn;
-    private static JButton bit6Btn;
-    private static JButton bit7Btn;
-    private static JButton bit8Btn;
-    private static JButton bit9Btn;
-    private static JButton bit10Btn;
-    private static JButton bit11Btn;
-    private static JButton encodeBtn;
-    private static JButton advanceBtn;
-    private static JButton fastForwardBtn;
-    
-    private static JTextField enterMsgTxtField;
-
-    private static JLabel invalidMsgDisp;
-
-    public static JButton[] messageButtons = new JButton[11];
-    
+    private final JFrame frame = new JFrame("Cyclic Code Simulator");
+    private final CardLayout cards = new CardLayout();
+    private final JPanel screens = new JPanel(cards);
+    private final Font normal = new Font(Font.SANS_SERIF, Font.PLAIN, 16);
     public EncoderSimPanel encoderSimDisp;
     public DecoderSimPanel decoderSimDisp;
-
-    private JButton showDecoderBtn;
-    private JButton backToEncoderBtn;
-    private JButton decoderStepBtn;
-    private JButton decoderFastForwardBtn;
-    private JLabel poly_lbl_x_2;
-    private JLabel poly_lbl_x_3;
-    private JLabel poly_lbl_x_4;
-    private JLabel poly_ex_lbl_2;
-    private JLabel poly_ex_lbl_3;
-    private JLabel poly_ex_lbl_4;
-    private JLabel r0_label;
-    private JLabel r1_label;
-    private JLabel r2_label;
-    private JLabel r3_label;
-    private JLabel xor_1_label;
-    private JLabel xor_2_label;
-    private JLabel r0_status_disp;
-    private JLabel r1_status_disp;
-    private JLabel r2_status_disp;
-    private JLabel r3_status_disp;
-    private JLabel bitstream_disp;
+    private JTextField messageInput;
+    private JLabel inputError, encoderStatus, encoderResult, decoderStatus, decoderResult;
+    private JLabel receivedResult, correctedResult, recoveredResult, injectionStatus, testSummary;
+    private JLabel encoderBits, decoderBits;
+    private JButton encoderStep, decoderStep, encoderPlay, decoderPlay, channelButton;
+    private final JButton[] errorBits = new JButton[15];
+    private final JButton[] messageBits = new JButton[11];
+    private int errorPosition = -1;
+    private JPanel testResults;
+    private JLabel transmittedBits;
+    private DefaultTableModel tests;
+    private String transmitted = "", received = "";
+    private Timer encoderTimer, decoderTimer;
 
     public static void main(String[] args) {
-
-        EventQueue.invokeLater(new Runnable() {
-
-            public void run() {
-
-                try {
-                    MainDisplay window = new MainDisplay();
-                    frame.setVisible(true);
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+        EventQueue.invokeLater(() -> new MainDisplay().frame.setVisible(true));
     }
-
     public MainDisplay() {
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setContentPane(screens);
+        frame.setSize(1366, 900);
+        frame.setMinimumSize(new Dimension(1100, 800));
+        frame.setLocationByPlatform(true);
         initializeMessagePanel();
         initializeEncodingPanel();
+        initializeErrorInjectionPanel();
         initializeDecodingPanel();
-        addFunctionality();
+        encoderTimer = new Timer(650, e -> advanceEncoder());
+        decoderTimer = new Timer(650, e -> advanceDecoder());
+    }
+    private JPanel page(String title, String name) {
+        JPanel page = new JPanel(new BorderLayout(12, 12));
+        page.setBorder(BorderFactory.createEmptyBorder(18, 24, 18, 24));
+        JLabel heading = new JLabel(title, SwingConstants.CENTER);
+        heading.setFont(normal.deriveFont(Font.BOLD, 28));
+        page.add(heading, BorderLayout.NORTH);
+        screens.add(page, name);
+        return page;
+    }
+    private JPanel column() { JPanel p = new JPanel(); p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS)); return p; }
+    private JLabel label(String text) { JLabel l = new JLabel(text) { public Dimension getMaximumSize() { return new Dimension(Integer.MAX_VALUE, getPreferredSize().height); } }; l.setFont(normal); l.setAlignmentX(Component.LEFT_ALIGNMENT); return l; }
+    private JButton button(String text, Runnable action) {
+        JButton b = new JButton(text); b.setFont(normal); b.addActionListener(e -> action.run()); return b;
+    }
+    private JPanel row(Component... children) { JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 6)); p.setAlignmentX(Component.LEFT_ALIGNMENT); for(Component c:children)p.add(c); return p; }
+    private void stopTimers() { if(encoderTimer!=null)encoderTimer.stop(); if(decoderTimer!=null)decoderTimer.stop(); }
+    private void show(String name) { stopTimers(); encoderPlay.setText("Auto play"); decoderPlay.setText("Auto play"); cards.show(screens, name); }
+
+    private JPanel centeredRow(Component... children) {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 6));
+        for (Component child : children) panel.add(child);
+        return panel;
     }
 
     private void initializeMessagePanel() {
-
-        frame = new JFrame("Cyclic Code Simulator");
-        frame.setBounds(100, 100, 1366, 768);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.getContentPane().setLayout(new CardLayout(0, 0));
-
-        JPanel messagePanelDisp = new JPanel();
-        messagePanelDisp.setLayout(null);
-        frame.getContentPane().add(messagePanelDisp, "name_9840094793041");
-
-        // Title
-        JLabel titleDisp = new JLabel("Cyclic Code Simulator!");
-        titleDisp.setHorizontalAlignment(SwingConstants.CENTER);
-        titleDisp.setFont(new Font("MesloLGLDZ Nerd Font", Font.BOLD, 26));
-        titleDisp.setBounds(378, 25, 609, 80);
-        messagePanelDisp.add(titleDisp);
-
-        // Enter message label
-        JLabel enterMsgLabel = new JLabel("Please enter an 11-bit message:");
-        enterMsgLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        enterMsgLabel.setFont(new Font("MesloLGLDZ Nerd Font", Font.PLAIN, 20));
-        enterMsgLabel.setBounds(378, 120, 609, 50);
-        messagePanelDisp.add(enterMsgLabel);
-
-        // Text field
-        enterMsgTxtField = new JTextField();
-        enterMsgTxtField.setHorizontalAlignment(SwingConstants.CENTER);
-        enterMsgTxtField.setFont(new Font("MesloLGLDZ Nerd Font", Font.BOLD, 20));
-        enterMsgTxtField.setBounds(508, 180, 350, 50);
-        enterMsgTxtField.setColumns(11);
-        messagePanelDisp.add(enterMsgTxtField);
-
-        // Invalid message display
-        invalidMsgDisp = new JLabel("");
-        invalidMsgDisp.setHorizontalAlignment(SwingConstants.CENTER);
-        invalidMsgDisp.setFont(new Font("MesloLGLDZ Nerd Font", Font.BOLD, 16));
-        invalidMsgDisp.setBounds(378, 230, 609, 30);
-        messagePanelDisp.add(invalidMsgDisp);
-
-        // Message bits label
-        JLabel messageBitsLbl = new JLabel("11-bit Message");
-        messageBitsLbl.setHorizontalAlignment(SwingConstants.CENTER);
-        messageBitsLbl.setFont(new Font("MesloLGLDZ Nerd Font", Font.PLAIN, 18));
-        messageBitsLbl.setBounds(378, 270, 609, 40);
-        messagePanelDisp.add(messageBitsLbl);
-
-        // Panel for 11 bits
-        JPanel messageButtonDisp = new JPanel();
-        messageButtonDisp.setBounds(210, 310, 930, 90);
-        messageButtonDisp.setLayout(null);
-        messagePanelDisp.add(messageButtonDisp);
-
-        bit1Btn = new JButton("-");
-        bit1Btn.setBounds(10, 15, 65, 60);
-        messageButtonDisp.add(bit1Btn);
-
-        bit2Btn = new JButton("-");
-        bit2Btn.setBounds(90, 15, 65, 60);
-        messageButtonDisp.add(bit2Btn);
-
-        bit3Btn = new JButton("-");
-        bit3Btn.setBounds(170, 15, 65, 60);
-        messageButtonDisp.add(bit3Btn);
-
-        bit4Btn = new JButton("-");
-        bit4Btn.setBounds(250, 15, 65, 60);
-        messageButtonDisp.add(bit4Btn);
-
-        bit5Btn = new JButton("-");
-        bit5Btn.setBounds(330, 15, 65, 60);
-        messageButtonDisp.add(bit5Btn);
-
-        bit6Btn = new JButton("-");
-        bit6Btn.setBounds(410, 15, 65, 60);
-        messageButtonDisp.add(bit6Btn);
-
-        bit7Btn = new JButton("-");
-        bit7Btn.setBounds(490, 15, 65, 60);
-        messageButtonDisp.add(bit7Btn);
-
-        bit8Btn = new JButton("-");
-        bit8Btn.setBounds(570, 15, 65, 60);
-        messageButtonDisp.add(bit8Btn);
-
-        bit9Btn = new JButton("-");
-        bit9Btn.setBounds(650, 15, 65, 60);
-        messageButtonDisp.add(bit9Btn);
-
-        bit10Btn = new JButton("-");
-        bit10Btn.setBounds(730, 15, 65, 60);
-        messageButtonDisp.add(bit10Btn);
-
-        bit11Btn = new JButton("-");
-        bit11Btn.setBounds(810, 15, 65, 60);
-        messageButtonDisp.add(bit11Btn);
-
-        // Button array
-        messageButtons[0] = bit1Btn;
-        messageButtons[1] = bit2Btn;
-        messageButtons[2] = bit3Btn;
-        messageButtons[3] = bit4Btn;
-        messageButtons[4] = bit5Btn;
-        messageButtons[5] = bit6Btn;
-        messageButtons[6] = bit7Btn;
-        messageButtons[7] = bit8Btn;
-        messageButtons[8] = bit9Btn;
-        messageButtons[9] = bit10Btn;
-        messageButtons[10] = bit11Btn;
-
-        // Display only
-        for (JButton button : messageButtons) {
-            button.setFont(new Font("MesloLGLDZ Nerd Font", Font.BOLD, 20));
-            button.setEnabled(false);
+        JPanel page = page("Cyclic Code Simulator!", "message");
+        JPanel body = column();
+        body.add(Box.createVerticalStrut(25));
+        body.add(centeredRow(label("Please enter an 11-bit message:")));
+        messageInput = new JTextField(18);
+        messageInput.setHorizontalAlignment(JTextField.CENTER);
+        messageInput.setFont(normal.deriveFont(Font.BOLD, 20f));
+        body.add(centeredRow(messageInput));
+        inputError = label(" ");
+        inputError.setForeground(new Color(160, 35, 35));
+        body.add(centeredRow(inputError));
+        body.add(Box.createVerticalStrut(20));
+        body.add(centeredRow(label("11-bit Message")));
+        JPanel bits = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 6));
+        for (int i = 0; i < messageBits.length; i++) {
+            messageBits[i] = new JButton("-");
+            messageBits[i].setFont(normal.deriveFont(Font.BOLD, 20f));
+            messageBits[i].setPreferredSize(new Dimension(65, 60));
+            messageBits[i].setEnabled(false);
+            bits.add(messageBits[i]);
         }
-
-        // Encode button
-        encodeBtn = new JButton("ENCODE");
-        encodeBtn.setFont(new Font("MesloLGLDZ Nerd Font", Font.BOLD, 18));
-        encodeBtn.setBounds(583, 440, 200, 60);
-        //encodeBtn.setEnabled(false);
-        messagePanelDisp.add(encodeBtn);
+        body.add(bits);
+        body.add(Box.createVerticalStrut(25));
+        JButton encode = button("ENCODE", this::startEncoding);
+        encode.setPreferredSize(new Dimension(200, 60));
+        body.add(centeredRow(encode));
+        messageInput.addActionListener(e -> previewMessage());
+        messageInput.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { previewMessage(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { previewMessage(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { previewMessage(); }
+        });
+        JPanel content = new JPanel(new BorderLayout());
+        content.add(body, BorderLayout.NORTH);
+        page.add(content, BorderLayout.CENTER);
     }
 
+    private void previewMessage() {
+        String value = messageInput.getText();
+        boolean valid = value.matches("[01]{11}");
+        for (int i = 0; i < messageBits.length; i++) {
+            messageBits[i].setText(valid ? String.valueOf(value.charAt(i)) : "-");
+        }
+        inputError.setText(value.isEmpty() || valid ? " " : "Enter exactly 11 bits (0 or 1).");
+    }
 
-	/**
-	 * Initialize the contents of the frame.
-	 */
-	private void initializeEncodingPanel() {
-		JPanel encodePanelDisp = new JPanel();
-		frame.getContentPane().add(encodePanelDisp, "name_293514128711250");
-		encodePanelDisp.setLayout(null);
-
-        showDecoderBtn = new JButton("Open Decoder");
-        showDecoderBtn.setBounds(62, 32, 165, 42);
-        encodePanelDisp.add(showDecoderBtn);
-		
-		encoderSimDisp = new EncoderSimPanel();
-		encoderSimDisp.setBackground(new Color(210, 224, 228));
-		encoderSimDisp.setBounds(60, 78, 1241, 571);
-		encodePanelDisp.add(encoderSimDisp);
-		encoderSimDisp.setLayout(null);
-		
-		advanceBtn = new JButton(">");
-		advanceBtn.setFont(new Font("Neutraface 2 Text", Font.BOLD, 40));
-		advanceBtn.setBounds(1040, 6, 90, 90);
-		encoderSimDisp.add(advanceBtn);
-		
-		fastForwardBtn = new JButton(">>>");
-		fastForwardBtn.setFont(new Font("Neutraface 2 Text", Font.BOLD, 40));
-		fastForwardBtn.setBounds(1142, 6, 90, 90);
-		encoderSimDisp.add(fastForwardBtn);
-		
-		JLabel adv = new JLabel("Advance 1 Step");
-		adv.setHorizontalAlignment(SwingConstants.CENTER);
-		adv.setFont(new Font("Neutraface 2 Text", Font.PLAIN, 12));
-		adv.setBounds(1040, 107, 90, 16);
-		encoderSimDisp.add(adv);
-		
-		JLabel lblFastForward = new JLabel("Fast Forward");
-		lblFastForward.setHorizontalAlignment(SwingConstants.CENTER);
-		lblFastForward.setFont(new Font("Neutraface 2 Text", Font.PLAIN, 12));
-		lblFastForward.setBounds(1142, 108, 90, 16);
-		encoderSimDisp.add(lblFastForward);
-		
-		encoderSimDisp.r0Lbl = new JLabel("R0 = 0");
-		encoderSimDisp.r0Lbl.setFont(new Font("Dialog", Font.BOLD, 22));
-		encoderSimDisp.r0Lbl.setBounds(105, 403, 120, 35);
-		encoderSimDisp.add(encoderSimDisp.r0Lbl);
-		
-		encoderSimDisp.r1Lbl = new JLabel("R1 = 0");
-		encoderSimDisp.r1Lbl.setFont(new Font("Dialog", Font.BOLD, 22));
-		encoderSimDisp.r1Lbl.setBounds(305, 403, 120, 35);
-		encoderSimDisp.add(encoderSimDisp.r1Lbl);
-		
-		encoderSimDisp.r2Lbl = new JLabel("R2 = 0");
-		encoderSimDisp.r2Lbl.setFont(new Font("Dialog", Font.BOLD, 22));
-		encoderSimDisp.r2Lbl.setBounds(505, 403, 120, 35);
-		encoderSimDisp.add(encoderSimDisp.r2Lbl);
-		
-		encoderSimDisp.xor0Lbl = new JLabel("XOR0");
-		encoderSimDisp.xor0Lbl.setFont(new Font("Dialog", Font.BOLD, 22));
-		encoderSimDisp.xor0Lbl.setBounds(650, 403, 120, 35);
-		encoderSimDisp.add(encoderSimDisp.xor0Lbl);
-		
-		encoderSimDisp.r3Lbl = new JLabel("R3 = 0");
-		encoderSimDisp.r3Lbl.setFont(new Font("Dialog", Font.BOLD, 22));
-		encoderSimDisp.r3Lbl.setBounds(785, 403, 120, 35);
-		encoderSimDisp.add(encoderSimDisp.r3Lbl);
-		
-		encoderSimDisp.xor1Lbl = new JLabel("XOR1");
-		encoderSimDisp.xor1Lbl.setFont(new Font("Dialog", Font.BOLD, 22));
-		encoderSimDisp.xor1Lbl.setBounds(930, 403, 120, 35);
-		encoderSimDisp.add(encoderSimDisp.xor1Lbl);
-		
-		JLabel titleLbl = new JLabel("Cyclic Code Generator");
-		titleLbl.setHorizontalAlignment(SwingConstants.CENTER);
-		titleLbl.setFont(new Font("Neutraface 2 Text", Font.BOLD, 36));
-		titleLbl.setBounds(238, 21, 889, 63);
-		encodePanelDisp.add(titleLbl);
-	}
-	
+    private void initializeEncodingPanel() {
+        JPanel page = page("Encoder", "encoding");
+        JPanel body = new JPanel(new BorderLayout(8, 8));
+        encoderSimDisp = new EncoderSimPanel();
+        encoderBits = label("Message: -"); body.add(encoderBits, BorderLayout.NORTH);
+        body.add(encoderSimDisp, BorderLayout.CENTER);
+        JPanel bottom = column();
+        encoderStatus = label(" "); encoderResult = label(" "); bottom.add(encoderStatus); bottom.add(encoderResult);
+        encoderStep = button("Follow signals", () -> {encoderTimer.stop(); advanceEncoder();});
+        encoderPlay = button("Auto play", () -> {if(encoderTimer.isRunning())encoderTimer.stop();else encoderTimer.start(); encoderPlay.setText(encoderTimer.isRunning()?"Pause":"Auto play");});
+        channelButton = button("Transmission / error →", this::openChannel);
+        bottom.add(row(button("New message", () -> show("message")), encoderStep, encoderPlay,
+                button("Restart", () -> {stopTimers();encoderSimDisp.startEncoding(encoderSimDisp.getMessage());updateEncoder();}), channelButton));
+        body.add(bottom, BorderLayout.SOUTH); page.add(body, BorderLayout.CENTER);
+    }
+    private void initializeErrorInjectionPanel() {
+        JPanel page = page("Introduce an Error", "channel");
+        JPanel body = new JPanel(new BorderLayout(8, 20));
+        JPanel top = column();
+        top.add(Box.createVerticalStrut(25));
+        transmittedBits = label(" ");
+        top.add(centeredRow(transmittedBits));
+        top.add(Box.createVerticalStrut(20));
+        top.add(centeredRow(label("Click a bit to flip it. One error at a time.")));
+        JPanel bits = new JPanel(new GridLayout(1, 15, 8, 0));
+        for (int i = 0; i < errorBits.length; i++) {
+            final int position = 14 - i;
+            JButton bit = button("0", () -> {
+                errorPosition = errorPosition == position ? -1 : position;
+                updateReceived();
+            });
+            bit.setFont(normal.deriveFont(Font.BOLD, 22f));
+            bit.setPreferredSize(new Dimension(54, 60));
+            bit.setToolTipText("Flip bit " + position);
+            errorBits[i] = bit;
+            JPanel cell = new JPanel(new BorderLayout(0, 6));
+            JLabel index = new JLabel(Integer.toString(position), SwingConstants.CENTER);
+            cell.add(index, BorderLayout.NORTH);
+            cell.add(bit, BorderLayout.CENTER);
+            bits.add(cell);
+        }
+        top.add(centeredRow(bits));
+        injectionStatus = label("No error");
+        top.add(centeredRow(injectionStatus));
+        top.add(Box.createVerticalStrut(20));
+        top.add(centeredRow(button("Back", () -> show("encoding")),
+                button("Reset", () -> { errorPosition = -1; updateReceived(); }),
+                button("DECODE", this::startDecoding)));
+        top.add(centeredRow(button("Test all errors", () -> {
+            runAutomaticTests();
+            testResults.setVisible(true);
+            page.revalidate();
+        })));
+        body.add(top, BorderLayout.NORTH);
+        tests = new DefaultTableModel(new String[]{"Error bit", "Syndrome R3..R0", "Detected bit", "Corrected word", "Message", "Result"}, 0) {
+            public boolean isCellEditable(int r, int c) { return false; }
+        };
+        JTable table = new JTable(tests);
+        table.setRowHeight(24);
+        table.setFont(normal.deriveFont(14f));
+        table.getColumnModel().getColumn(3).setPreferredWidth(210);
+        table.getColumnModel().getColumn(4).setPreferredWidth(170);
+        JScrollPane scroll = new JScrollPane(table);
+        scroll.setColumnHeaderView(table.getTableHeader());
+        testResults = new JPanel(new BorderLayout(8, 8));
+        testResults.add(scroll, BorderLayout.CENTER);
+        testSummary = label(" ");
+        testResults.add(centeredRow(testSummary, button("Hide results", () -> {
+            testResults.setVisible(false);
+            page.revalidate();
+        })), BorderLayout.SOUTH);
+        testResults.setVisible(false);
+        body.add(testResults, BorderLayout.CENTER);
+        page.add(body, BorderLayout.CENTER);
+    }
     private void initializeDecodingPanel() {
-        JPanel decodePanelDisp = new JPanel();
-        frame.getContentPane().add(decodePanelDisp, "decoding");
-        decodePanelDisp.setLayout(null);
-
-        decoderSimDisp = new DecoderSimPanel();
-        decoderSimDisp.setBackground(new Color(210, 224, 228));
-        decoderSimDisp.setBounds(62, 103, 1241, 571);
-        decoderSimDisp.setLayout(null);
-        decodePanelDisp.add(decoderSimDisp);
-
-        decoderStepBtn = new JButton(">");
-        decoderStepBtn.setFont(new Font("Neutraface 2 Text", Font.BOLD, 40));
-        decoderStepBtn.setBounds(1040, 6, 90, 90);
-        decoderSimDisp.add(decoderStepBtn);
-
-        decoderFastForwardBtn = new JButton(">>>");
-        decoderFastForwardBtn.setFont(new Font("Neutraface 2 Text", Font.BOLD, 28));
-        decoderFastForwardBtn.setMargin(new java.awt.Insets(0, 0, 0, 0));
-        decoderFastForwardBtn.setBounds(1142, 6, 90, 90);
-        decoderSimDisp.add(decoderFastForwardBtn);
-
-        JLabel advanceLabel = new JLabel("Advance 1 Step");
-        advanceLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        advanceLabel.setFont(new Font("Neutraface 2 Text", Font.PLAIN, 12));
-        advanceLabel.setBounds(1040, 107, 90, 16);
-        decoderSimDisp.add(advanceLabel);
-
-        JLabel fastForwardLabel = new JLabel("Fast Forward");
-        fastForwardLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        fastForwardLabel.setFont(new Font("Neutraface 2 Text", Font.PLAIN, 12));
-        fastForwardLabel.setBounds(1142, 108, 90, 16);
-        decoderSimDisp.add(fastForwardLabel);
-        
-        JLabel poly_lbl_1 = new JLabel("1");
-        poly_lbl_1.setHorizontalAlignment(SwingConstants.CENTER);
-        poly_lbl_1.setFont(new Font("MesloLGM Nerd Font", Font.PLAIN, 20));
-        poly_lbl_1.setBounds(109, 44, 62, 52);
-        decoderSimDisp.add(poly_lbl_1);
-        
-        JLabel poly_lbl_x = new JLabel("x");
-        poly_lbl_x.setHorizontalAlignment(SwingConstants.CENTER);
-        poly_lbl_x.setFont(new Font("MesloLGM Nerd Font", Font.PLAIN, 20));
-        poly_lbl_x.setBounds(344, 44, 62, 52);
-        decoderSimDisp.add(poly_lbl_x);
-        
-        poly_lbl_x_2 = new JLabel("x");
-        poly_lbl_x_2.setHorizontalAlignment(SwingConstants.CENTER);
-        poly_lbl_x_2.setFont(new Font("MesloLGM Nerd Font", Font.PLAIN, 20));
-        poly_lbl_x_2.setBounds(542, 44, 62, 52);
-        decoderSimDisp.add(poly_lbl_x_2);
-        
-        poly_lbl_x_3 = new JLabel("x");
-        poly_lbl_x_3.setHorizontalAlignment(SwingConstants.CENTER);
-        poly_lbl_x_3.setFont(new Font("MesloLGM Nerd Font", Font.PLAIN, 20));
-        poly_lbl_x_3.setBounds(791, 44, 62, 52);
-        decoderSimDisp.add(poly_lbl_x_3);
-        
-        poly_lbl_x_4 = new JLabel("x");
-        poly_lbl_x_4.setHorizontalAlignment(SwingConstants.CENTER);
-        poly_lbl_x_4.setFont(new Font("MesloLGM Nerd Font", Font.PLAIN, 20));
-        poly_lbl_x_4.setBounds(925, 44, 62, 52);
-        decoderSimDisp.add(poly_lbl_x_4);
-        
-        poly_ex_lbl_2 = new JLabel("2");
-        poly_ex_lbl_2.setHorizontalAlignment(SwingConstants.CENTER);
-        poly_ex_lbl_2.setFont(new Font("MesloLGM Nerd Font", Font.PLAIN, 16));
-        poly_ex_lbl_2.setBounds(587, 44, 17, 16);
-        decoderSimDisp.add(poly_ex_lbl_2);
-        
-        poly_ex_lbl_3 = new JLabel("3");
-        poly_ex_lbl_3.setHorizontalAlignment(SwingConstants.CENTER);
-        poly_ex_lbl_3.setFont(new Font("MesloLGM Nerd Font", Font.PLAIN, 16));
-        poly_ex_lbl_3.setBounds(836, 45, 17, 16);
-        decoderSimDisp.add(poly_ex_lbl_3);
-        
-        poly_ex_lbl_4 = new JLabel("4");
-        poly_ex_lbl_4.setHorizontalAlignment(SwingConstants.CENTER);
-        poly_ex_lbl_4.setFont(new Font("MesloLGM Nerd Font", Font.PLAIN, 16));
-        poly_ex_lbl_4.setBounds(970, 45, 17, 16);
-        decoderSimDisp.add(poly_ex_lbl_4);
-        
-        r0_label = new JLabel("Register 0");
-        r0_label.setHorizontalAlignment(SwingConstants.CENTER);
-        r0_label.setFont(new Font("MesloLGM Nerd Font", Font.BOLD, 13));
-        r0_label.setBounds(235, 274, 90, 16);
-        decoderSimDisp.add(r0_label);
-        
-        r1_label = new JLabel("Register 1");
-        r1_label.setHorizontalAlignment(SwingConstants.CENTER);
-        r1_label.setFont(new Font("MesloLGM Nerd Font", Font.BOLD, 13));
-        r1_label.setBounds(433, 274, 90, 16);
-        decoderSimDisp.add(r1_label);
-        
-        r2_label = new JLabel("Register 2");
-        r2_label.setHorizontalAlignment(SwingConstants.CENTER);
-        r2_label.setFont(new Font("MesloLGM Nerd Font", Font.BOLD, 13));
-        r2_label.setBounds(632, 274, 90, 16);
-        decoderSimDisp.add(r2_label);
-        
-        r3_label = new JLabel("Register 3");
-        r3_label.setHorizontalAlignment(SwingConstants.CENTER);
-        r3_label.setFont(new Font("MesloLGM Nerd Font", Font.BOLD, 13));
-        r3_label.setBounds(912, 274, 90, 16);
-        decoderSimDisp.add(r3_label);
-        
-        xor_1_label = new JLabel("XOR");
-        xor_1_label.setHorizontalAlignment(SwingConstants.CENTER);
-        xor_1_label.setFont(new Font("MesloLGM Nerd Font", Font.BOLD, 13));
-        xor_1_label.setBounds(94, 274, 90, 16);
-        decoderSimDisp.add(xor_1_label);
-        
-        xor_2_label = new JLabel("XOR");
-        xor_2_label.setHorizontalAlignment(SwingConstants.CENTER);
-        xor_2_label.setFont(new Font("MesloLGM Nerd Font", Font.BOLD, 13));
-        xor_2_label.setBounds(775, 274, 90, 16);
-        decoderSimDisp.add(xor_2_label);
-        
-        r0_status_disp = new JLabel("holds");
-        r0_status_disp.setHorizontalAlignment(SwingConstants.CENTER);
-        r0_status_disp.setFont(new Font("MesloLGM Nerd Font", Font.BOLD, 16));
-        r0_status_disp.setBounds(235, 410, 90, 16);
-        decoderSimDisp.add(r0_status_disp);
-        
-        r1_status_disp = new JLabel("holds");
-        r1_status_disp.setHorizontalAlignment(SwingConstants.CENTER);
-        r1_status_disp.setFont(new Font("MesloLGM Nerd Font", Font.BOLD, 16));
-        r1_status_disp.setBounds(433, 411, 90, 16);
-        decoderSimDisp.add(r1_status_disp);
-        
-        r2_status_disp = new JLabel("holds");
-        r2_status_disp.setHorizontalAlignment(SwingConstants.CENTER);
-        r2_status_disp.setFont(new Font("MesloLGM Nerd Font", Font.BOLD, 16));
-        r2_status_disp.setBounds(632, 411, 90, 16);
-        decoderSimDisp.add(r2_status_disp);
-        
-        r3_status_disp = new JLabel("holds");
-        r3_status_disp.setHorizontalAlignment(SwingConstants.CENTER);
-        r3_status_disp.setFont(new Font("MesloLGM Nerd Font", Font.BOLD, 16));
-        r3_status_disp.setBounds(912, 411, 90, 16);
-        decoderSimDisp.add(r3_status_disp);
-        
-        bitstream_disp = new JLabel("10000110101");
-        bitstream_disp.setHorizontalAlignment(SwingConstants.CENTER);
-        bitstream_disp.setFont(new Font("MesloLGM Nerd Font", Font.BOLD, 16));
-        bitstream_disp.setBounds(11, 530, 160, 16);
-        decoderSimDisp.add(bitstream_disp);
-
-        JLabel titleLabel = new JLabel("Cyclic Code Decoder");
-        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Neutraface 2 Text", Font.BOLD, 36));
-        titleLabel.setBounds(238, 21, 889, 63);
-        decodePanelDisp.add(titleLabel);
-
-        backToEncoderBtn = new JButton("Back to Encoder");
-        backToEncoderBtn.setBounds(62, 32, 165, 42);
-        decodePanelDisp.add(backToEncoderBtn);
+        JPanel page = page("Decoder and correction", "decoding");
+        JPanel body = new JPanel(new BorderLayout(8, 8));
+        decoderBits = label("Received word: -");body.add(decoderBits,BorderLayout.NORTH);
+        decoderSimDisp = new DecoderSimPanel();body.add(decoderSimDisp,BorderLayout.CENTER);
+        JPanel bottom = column();
+        decoderStatus=label(" ");decoderResult=label(" ");receivedResult=label(" ");correctedResult=label(" ");recoveredResult=label(" ");
+        bottom.add(decoderStatus);bottom.add(decoderResult);bottom.add(receivedResult);bottom.add(correctedResult);bottom.add(recoveredResult);
+        decoderStep=button("Follow signals",()->{decoderTimer.stop();advanceDecoder();});
+        decoderPlay=button("Auto play",()->{if(decoderTimer.isRunning())decoderTimer.stop();else decoderTimer.start();decoderPlay.setText(decoderTimer.isRunning()?"Pause":"Auto play");});
+        bottom.add(row(button("← Change error",()->show("channel")),decoderStep,decoderPlay,
+                button("Restart decoder",this::startDecoding),button("New message",()->show("message"))));
+        body.add(bottom,BorderLayout.SOUTH);page.add(body,BorderLayout.CENTER);
     }
-
-    private void addFunctionality() {
-        showDecoderBtn.addActionListener(e -> {
-            CardLayout cards = (CardLayout) frame.getContentPane().getLayout();
-            cards.show(frame.getContentPane(), "decoding");
-        });
-
-        backToEncoderBtn.addActionListener(e -> {
-            CardLayout cards = (CardLayout) frame.getContentPane().getLayout();
-            cards.show(frame.getContentPane(), "name_293514128711250");
-        });
-
-        // Attach decoder clock-step and fast-forward logic here when ready.
-
-	    enterMsgTxtField.addActionListener(new ActionListener() {
-
-	        public void actionPerformed(ActionEvent e) {
-
-	            String input = enterMsgTxtField.getText();
-
-	            if (MessageInput.validMessage(input)) {
-
-	                invalidMsgDisp.setText("");
-
-	                for (int i = 0; i < 11; i++) {
-	                    messageButtons[i].setText(input.charAt(i) + "");
-	                }
-
-	                encodeBtn.setEnabled(true);
-
-	            } else {
-
-	                invalidMsgDisp.setText(
-	                    "Invalid Message - Enter exactly 11 bits (0 or 1)"
-	                );
-
-	                for (int i = 0; i < 11; i++) {
-	                    messageButtons[i].setText("-");
-	                }
-
-	                encodeBtn.setEnabled(false);
-	            }
-	        }
-	    });
-
-
-	    // ENCODE BUTTON
-	    encodeBtn.addActionListener(e -> {
-
-	        encoderSimDisp.startEncoding();
-
-	        CardLayout cards =
-	            (CardLayout) frame.getContentPane().getLayout();
-
-	        cards.show(
-	            frame.getContentPane(),
-	            "name_293514128711250"
-	        );
-	    });
-
-
-	    advanceBtn.addActionListener(e -> {
-
-	        encoderSimDisp.advanceOneStep();
-
-	    });
-
-
-	    fastForwardBtn.addActionListener(e -> {
-
-	        encoderSimDisp.fastForward();
-
-	    });
-
-	}
+    private void startEncoding() {
+        String value=messageInput.getText();
+        if(!MessageInput.validMessage(value)){inputError.setText("Enter exactly 11 bits, using only 0 and 1.");return;}
+        inputError.setText(" ");stopTimers();encoderSimDisp.startEncoding(value);updateEncoder();show("encoding");
+    }
+    private void advanceEncoder() {
+        if(encoderSimDisp.isFinished()){encoderTimer.stop();return;}
+        if(encoderSimDisp.hasPreview())encoderSimDisp.commitNext();else encoderSimDisp.prepareNext();
+        if(encoderSimDisp.isFinished())encoderTimer.stop();updateEncoder();
+    }
+    private void updateEncoder() {
+        int clock=encoderSimDisp.getClock();boolean done=encoderSimDisp.isFinished();
+        encoderBits.setText(bitLine("Message · rightmost bit first",encoderSimDisp.getMessage(),done?-1:10-clock,-1));
+        encoderStatus.setText("Clock " + clock + "/11 · " + encoderSimDisp.getCalculations());
+        encoderResult.setText(done?"Check bits (R0 R1 R2 R3): " + encoderSimDisp.getCheckBits() + "     Codeword = check bits + message: " + encoderSimDisp.getCodeword():
+                encoderSimDisp.hasPreview()?"Next values are ready. The registers have not changed yet.":"Registers hold their current values until the next clock edge.");
+        encoderStep.setText(encoderSimDisp.hasPreview()?"Clock registers":"Follow signals");
+        encoderStep.setEnabled(!done);encoderPlay.setEnabled(!done);channelButton.setEnabled(done);
+        encoderPlay.setText(encoderTimer!=null&&encoderTimer.isRunning()?"Pause":"Auto play");
+    }
+    private void openChannel() {
+        if(!encoderSimDisp.isFinished())return;
+        transmitted=encoderSimDisp.getCodeword();tests.setRowCount(0);
+        testResults.setVisible(false);
+        errorPosition = -1;updateReceived();show("channel");
+    }
+    private void updateReceived() {
+        if(transmitted.isEmpty())return;
+        int position=errorPosition;
+        char[] bits=transmitted.toCharArray();if(position>=0)bits[14-position]=bits[14-position]=='0'?'1':'0';received=new String(bits);
+        transmittedBits.setText("Encoded message: " + transmitted);
+        for (int i = 0; i < errorBits.length; i++) {
+            boolean changed = position >= 0 && i == 14 - position;
+            errorBits[i].setText(String.valueOf(received.charAt(i)));
+            errorBits[i].setForeground(changed ? new Color(175, 45, 25) : UIManager.getColor("Button.foreground"));
+            errorBits[i].setBorder(changed
+                    ? BorderFactory.createLineBorder(new Color(175, 45, 25), 2)
+                    : UIManager.getBorder("Button.border"));
+            errorBits[i].getAccessibleContext().setAccessibleName("Bit " + (14 - i) + ": " + received.charAt(i) + (changed ? ", flipped" : ""));
+        }
+        injectionStatus.setText(position < 0 ? "No error" : "Bit " + position + " flipped");
+    }
+    private void startDecoding() {
+        if(received.isEmpty())return;
+        stopTimers();DecoderLogic.loadCodeword(received);decoderSimDisp.resetState();updateDecoder();show("decoding");
+    }
+    private void advanceDecoder() {
+        if(DecoderLogic.isFinished()){decoderTimer.stop();return;}
+        if(DecoderLogic.hasPreview())DecoderLogic.commitNext();else DecoderLogic.prepareNext();
+        if(DecoderLogic.isFinished())decoderTimer.stop();updateDecoder();
+    }
+    private void updateDecoder() {
+        int[] r=DecoderLogic.getRegisters();for(int i=0;i<4;i++)decoderSimDisp.setBit("R"+i,r[i]);
+        decoderSimDisp.setBit("XOR0",DecoderLogic.getLastLeftXor());decoderSimDisp.setBit("XOR1",DecoderLogic.getLastRightXor());
+        decoderSimDisp.setPreview(DecoderLogic.getNextRegisters(),DecoderLogic.getLastInput(),DecoderLogic.getLastFeedback(),
+                DecoderLogic.getLastInput()+" ⊕ "+DecoderLogic.getLastFeedback()+" = "+DecoderLogic.getLastLeftXor(),
+                DecoderLogic.getLastR2()+" ⊕ "+DecoderLogic.getLastFeedback()+" = "+DecoderLogic.getLastRightXor(),"XOR0","XOR1");
+        boolean done=DecoderLogic.isFinished();int clock=DecoderLogic.getClock();
+        decoderBits.setText(bitLine("Received · rightmost bit first",received,done?-1:14-clock,-1));
+        decoderStatus.setText("Clock "+clock+"/15 · "+(clock==0&&!DecoderLogic.hasPreview()?"Registers hold zero. Follow the first input bit.":DecoderLogic.getCalculations()));
+        decoderStep.setText(DecoderLogic.hasPreview()?"Clock registers":"Follow signals");decoderStep.setEnabled(!done);decoderPlay.setEnabled(!done);
+        decoderPlay.setText(decoderTimer!=null&&decoderTimer.isRunning()?"Pause":"Auto play");
+        if(done){
+            int position=DecoderLogic.getErrorPosition();String corrected=DecoderLogic.getCorrectedCodeword();
+            String syndrome=String.format("%4s",Integer.toBinaryString(DecoderLogic.getSyndrome())).replace(' ','0');
+            decoderResult.setText("Syndrome R3 R2 R1 R0: "+syndrome+(position<0?" · No error detected":" · Error at bit "+position+" (0 = rightmost)"));
+            receivedResult.setText(bitLine("Before correction",received,-1,position<0?-1:14-position));
+            correctedResult.setText(bitLine("Corrected codeword",corrected,-1,position<0?-1:14-position));
+            recoveredResult.setText("Recovered message: "+DecoderLogic.getRecoveredMessage()+" · "+(DecoderLogic.getRecoveredMessage().equals(encoderSimDisp.getMessage())?"Matches original":"Does not match original")
+                    +" · Recheck syndrome: "+(DecoderLogic.calculateSyndrome(Integer.parseInt(corrected,2))==0?"0000":"nonzero"));
+        }else{
+            decoderResult.setText(DecoderLogic.hasPreview()?"Both XOR outputs are ready. Clock all four registers together.":"Stored bits stay fixed while the next input is evaluated.");
+            receivedResult.setText(" ");correctedResult.setText(" ");recoveredResult.setText(" ");
+        }
+    }
+    private void runAutomaticTests() {
+        if(transmitted.isEmpty())return;tests.setRowCount(0);int pass=0;
+        for(int position=-1;position<15;position++){
+            int word=Integer.parseInt(transmitted,2);if(position>=0)word^=1<<position;
+            String damaged=String.format("%15s",Integer.toBinaryString(word)).replace(' ','0');
+            int syndrome=DecoderLogic.calculateSyndrome(word);int located=DecoderLogic.SYNDROME_TABLE[syndrome];
+            String corrected=DecoderLogic.correctWord(damaged),recovered=corrected.substring(4);
+            boolean ok=located==position&&corrected.equals(transmitted)&&recovered.equals(encoderSimDisp.getMessage())&&DecoderLogic.calculateSyndrome(Integer.parseInt(corrected,2))==0;
+            if(ok)pass++;
+            tests.addRow(new Object[]{position<0?"None":position,String.format("%4s",Integer.toBinaryString(syndrome)).replace(' ','0'),located<0?"None":located,corrected,recovered,ok?"PASS":"FAIL"});
+        }
+        testSummary.setText(pass+"/16 passed");
+    }
+    /** Active bit is underlined; the flipped/corrected bit is colored and bracketed. */
+    private String bitLine(String title,String bits,int active,int changed) {
+        StringBuilder html=new StringBuilder("<html>").append(title).append(": <font face='monospace'>");
+        for(int i=0;i<bits.length();i++){
+            if(i==changed)html.append("<font color='#a33a16'>[");if(i==active)html.append("<u><b>");
+            html.append(bits.charAt(i));
+            if(i==active)html.append("</b></u>");if(i==changed)html.append("]</font>");html.append(' ');
+        }
+        return html.append("</font></html>").toString();
+    }
 }

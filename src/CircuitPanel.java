@@ -2,6 +2,8 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Font;
+import java.awt.Shape;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.Ellipse2D;
@@ -59,10 +61,29 @@ public class CircuitPanel extends JPanel {
     private String[] feedbackTargets = new String[0];
     private String feedbackSource;
     private double feedbackY;
+    private String inputGate;
+    private int[] nextRegisters;
+    private int incoming, feedback;
+    private String firstExpression = "", secondExpression = "", firstGate = "", secondGate = "";
+
+    public final void setInputGate(String id) { element(id); inputGate = id; }
+    public final void setPreview(int[] next, int bit, int feedbackBit,
+            String expressionA, String expressionB, String gateA, String gateB) {
+        nextRegisters = next == null ? null : next.clone();
+        incoming = bit; feedback = feedbackBit;
+        firstExpression = expressionA; secondExpression = expressionB;
+        firstGate = gateA; secondGate = gateB;
+        repaint();
+    }
+    public final void clearPreview() { nextRegisters = null; repaint(); }
+    private static Color signalColor(int bit) { return bit == 1 ? new Color(26, 132, 96) : new Color(110, 119, 125); }
+    private static void centered(Graphics2D g, String value, double x, double y) {
+        g.drawString(value, (float)(x - g.getFontMetrics().stringWidth(value) / 2.0), (float)y);
+    }
 
     public CircuitPanel(CircuitElement... layout) {
-        setBackground(new Color(210, 224, 228));
-        setPreferredSize(new Dimension(1241, 571));
+        setBackground(new Color(245, 249, 250));
+        setPreferredSize(new Dimension(1100, 380));
         double x = 100;
         CircuitElement previous = null;
         for (CircuitElement specification : layout) {
@@ -75,7 +96,7 @@ public class CircuitPanel extends JPanel {
                         && element.type == ComponentType.REGISTER ? 100 : 50;
             }
             double size = element.type == ComponentType.REGISTER ? 100 : 80;
-            element.bounds.setRect(x, 350 - size / 2, size, size);
+            element.bounds.setRect(x, 200 - size / 2, size, size);
             elements.put(element.id, element);
             if (previous != null) {
                 connect(previous.id, Port.RIGHT, element.id, Port.LEFT, true);
@@ -145,7 +166,7 @@ public class CircuitPanel extends JPanel {
 
     public final int getBit(String id) { return element(id).bit; }
 
-    /** Defensive copy, in panel coordinates; callers cannot accidentally move a shape. */
+    /** Defensive copy, in the 1100 by 380 logical drawing coordinates; callers cannot accidentally move a shape. */
     public final Rectangle2D.Double getElementBounds(String id) {
         return (Rectangle2D.Double) element(id).bounds.clone();
     }
@@ -186,9 +207,14 @@ public class CircuitPanel extends JPanel {
         try {
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
-            g2.setStroke(new BasicStroke(4.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND));
+            double scale = Math.min(getWidth() / 1100.0, getHeight() / 380.0);
+            g2.translate((getWidth() - 1100 * scale) / 2, (getHeight() - 380 * scale) / 2);
+            g2.scale(scale, scale);
+            g2.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 15));
+            g2.setStroke(new BasicStroke(2.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND));
             g2.setColor(Color.DARK_GRAY);
             for (Connection connection : connections) {
+                g2.setColor(nextRegisters == null ? Color.GRAY : signalColor(element(connection.from).bit));
                 Point2D.Double start = port(connection.from, connection.fromPort);
                 Point2D.Double end = port(connection.to, connection.toPort);
                 if (connection.viaY != null) {
@@ -199,6 +225,7 @@ public class CircuitPanel extends JPanel {
                 line(g2, start.x, start.y, end.x, end.y, connection.arrow);
             }
             if (feedbackSource != null && feedbackTargets.length > 0) {
+                g2.setColor(nextRegisters == null ? Color.GRAY : signalColor(feedback));
                 Point2D.Double source = port(feedbackSource, Port.TOP);
                 double minX = source.x, maxX = source.x;
                 for (String id : feedbackTargets) {
@@ -212,17 +239,49 @@ public class CircuitPanel extends JPanel {
                     Point2D.Double target = port(id, Port.TOP);
                     line(g2, target.x, feedbackY, target.x, target.y, true);
                     if (target.x > minX && target.x < maxX) {
-                        g2.fill(new Ellipse2D.Double(target.x - 10, feedbackY - 10, 20, 20));
+                        g2.fill(new Ellipse2D.Double(target.x - 5, feedbackY - 5, 10, 10));
                     }
                 }
             }
-            for (CircuitElement element : elements.values()) {
-                g2.setColor(element.color != null ? element.color
-                        : element.bit == 1 ? ONE_COLOR : Color.DARK_GRAY);
-                Rectangle2D.Double b = element.bounds;
-                if (element.type == ComponentType.REGISTER) g2.fill(b);
-                else g2.fill(new Ellipse2D.Double(b.x, b.y, b.width, b.height));
+            if (inputGate != null) {
+                Point2D.Double p = port(inputGate, Port.BOTTOM);
+                g2.setColor(nextRegisters == null ? Color.GRAY : signalColor(incoming));
+                line(g2, p.x, p.y + 70, p.x, p.y, true);
+                g2.setColor(Color.DARK_GRAY);
+                centered(g2, nextRegisters == null ? "Input" : "Input " + incoming, p.x, p.y + 94);
             }
+            g2.setColor(Color.DARK_GRAY);
+            centered(g2, "g(x) = 1 + x³ + x⁴   •   LSB first", 550, 24);
+            centered(g2, nextRegisters == null ? "Feedback bus" : "Feedback = " + feedback, 550, 52);
+            for (CircuitElement element : elements.values()) {
+                Rectangle2D.Double b = element.bounds;
+                boolean register = element.type == ComponentType.REGISTER;
+                Shape shape = register ? b : new Ellipse2D.Double(b.x, b.y, b.width, b.height);
+                g2.setColor(element.color != null ? element.color
+                        : element.bit == 1 && (register || nextRegisters != null) ? new Color(205, 237, 223) : Color.WHITE);
+                g2.fill(shape);
+                g2.setColor(new Color(77, 95, 105));
+                g2.draw(shape);
+                g2.setColor(Color.DARK_GRAY);
+                g2.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 20));
+                centered(g2, register ? "holds " + element.bit : "⊕", b.getCenterX(), b.getCenterY() + 8);
+                g2.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 15));
+                centered(g2, element.id, b.getCenterX(), b.getMinY() - 16);
+                if (register) {
+                    int index = Integer.parseInt(element.id.substring(1));
+                    centered(g2, nextRegisters == null ? "" : "next " + nextRegisters[index],
+                            b.getCenterX(), b.getMaxY() + 27);
+                } else if (nextRegisters != null) {
+                    String expression = element.id.equals(firstGate) ? firstExpression
+                            : element.id.equals(secondGate) ? secondExpression : "";
+                    centered(g2, expression, b.getCenterX(), b.getMinY() - 40);
+                }
+            }
+            g2.setColor(Color.DARK_GRAY);
+            g2.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
+            centered(g2, "Boxes hold bits until the clock. XOR gives 1 when its two inputs differ.", 550, 353);
+            centered(g2, "The 1 and x³ terms select the feedback destinations; degree 4 requires four registers.", 550, 375);
+
         } finally {
             g2.dispose();
         }

@@ -11,6 +11,7 @@ public class DecoderSimPanel extends CircuitPanel {
             new CircuitElement("XOR1", ComponentType.XOR),
             new CircuitElement("R3", ComponentType.REGISTER)
         );
-        setFeedback("R3", 100, "XOR0", "XOR1");
+        setFeedback("R3", 70, "XOR0", "XOR1");
+        setInputGate("XOR0");
     }
 }
