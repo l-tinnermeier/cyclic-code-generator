@@ -37,6 +37,29 @@ public class MainDisplay {
     public static JButton[] messageButtons = new JButton[11];
     
     public EncoderSimPanel encoderSimDisp;
+    public DecoderSimPanel decoderSimDisp;
+
+    private JButton showDecoderBtn;
+    private JButton backToEncoderBtn;
+    private JButton decoderStepBtn;
+    private JButton decoderFastForwardBtn;
+    private JLabel poly_lbl_x_2;
+    private JLabel poly_lbl_x_3;
+    private JLabel poly_lbl_x_4;
+    private JLabel poly_ex_lbl_2;
+    private JLabel poly_ex_lbl_3;
+    private JLabel poly_ex_lbl_4;
+    private JLabel r0_label;
+    private JLabel r1_label;
+    private JLabel r2_label;
+    private JLabel r3_label;
+    private JLabel xor_1_label;
+    private JLabel xor_2_label;
+    private JLabel r0_status_disp;
+    private JLabel r1_status_disp;
+    private JLabel r2_status_disp;
+    private JLabel r3_status_disp;
+    private JLabel bitstream_disp;
 
     public static void main(String[] args) {
 
@@ -58,6 +81,7 @@ public class MainDisplay {
     public MainDisplay() {
         initializeMessagePanel();
         initializeEncodingPanel();
+        initializeDecodingPanel();
         addFunctionality();
     }
 
@@ -193,6 +217,10 @@ public class MainDisplay {
 		JPanel encodePanelDisp = new JPanel();
 		frame.getContentPane().add(encodePanelDisp, "name_293514128711250");
 		encodePanelDisp.setLayout(null);
+
+        showDecoderBtn = new JButton("Open Decoder");
+        showDecoderBtn.setBounds(62, 32, 165, 42);
+        encodePanelDisp.add(showDecoderBtn);
 		
 		encoderSimDisp = new EncoderSimPanel();
 		encoderSimDisp.setBackground(new Color(210, 224, 228));
@@ -259,7 +287,177 @@ public class MainDisplay {
 		encodePanelDisp.add(titleLbl);
 	}
 	
-	private void addFunctionality() {
+    private void initializeDecodingPanel() {
+        JPanel decodePanelDisp = new JPanel();
+        frame.getContentPane().add(decodePanelDisp, "decoding");
+        decodePanelDisp.setLayout(null);
+
+        decoderSimDisp = new DecoderSimPanel();
+        decoderSimDisp.setBackground(new Color(210, 224, 228));
+        decoderSimDisp.setBounds(62, 103, 1241, 571);
+        decoderSimDisp.setLayout(null);
+        decodePanelDisp.add(decoderSimDisp);
+
+        decoderStepBtn = new JButton(">");
+        decoderStepBtn.setFont(new Font("Neutraface 2 Text", Font.BOLD, 40));
+        decoderStepBtn.setBounds(1040, 6, 90, 90);
+        decoderSimDisp.add(decoderStepBtn);
+
+        decoderFastForwardBtn = new JButton(">>>");
+        decoderFastForwardBtn.setFont(new Font("Neutraface 2 Text", Font.BOLD, 28));
+        decoderFastForwardBtn.setMargin(new java.awt.Insets(0, 0, 0, 0));
+        decoderFastForwardBtn.setBounds(1142, 6, 90, 90);
+        decoderSimDisp.add(decoderFastForwardBtn);
+
+        JLabel advanceLabel = new JLabel("Advance 1 Step");
+        advanceLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        advanceLabel.setFont(new Font("Neutraface 2 Text", Font.PLAIN, 12));
+        advanceLabel.setBounds(1040, 107, 90, 16);
+        decoderSimDisp.add(advanceLabel);
+
+        JLabel fastForwardLabel = new JLabel("Fast Forward");
+        fastForwardLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        fastForwardLabel.setFont(new Font("Neutraface 2 Text", Font.PLAIN, 12));
+        fastForwardLabel.setBounds(1142, 108, 90, 16);
+        decoderSimDisp.add(fastForwardLabel);
+        
+        JLabel poly_lbl_1 = new JLabel("1");
+        poly_lbl_1.setHorizontalAlignment(SwingConstants.CENTER);
+        poly_lbl_1.setFont(new Font("MesloLGM Nerd Font", Font.PLAIN, 20));
+        poly_lbl_1.setBounds(109, 44, 62, 52);
+        decoderSimDisp.add(poly_lbl_1);
+        
+        JLabel poly_lbl_x = new JLabel("x");
+        poly_lbl_x.setHorizontalAlignment(SwingConstants.CENTER);
+        poly_lbl_x.setFont(new Font("MesloLGM Nerd Font", Font.PLAIN, 20));
+        poly_lbl_x.setBounds(344, 44, 62, 52);
+        decoderSimDisp.add(poly_lbl_x);
+        
+        poly_lbl_x_2 = new JLabel("x");
+        poly_lbl_x_2.setHorizontalAlignment(SwingConstants.CENTER);
+        poly_lbl_x_2.setFont(new Font("MesloLGM Nerd Font", Font.PLAIN, 20));
+        poly_lbl_x_2.setBounds(542, 44, 62, 52);
+        decoderSimDisp.add(poly_lbl_x_2);
+        
+        poly_lbl_x_3 = new JLabel("x");
+        poly_lbl_x_3.setHorizontalAlignment(SwingConstants.CENTER);
+        poly_lbl_x_3.setFont(new Font("MesloLGM Nerd Font", Font.PLAIN, 20));
+        poly_lbl_x_3.setBounds(791, 44, 62, 52);
+        decoderSimDisp.add(poly_lbl_x_3);
+        
+        poly_lbl_x_4 = new JLabel("x");
+        poly_lbl_x_4.setHorizontalAlignment(SwingConstants.CENTER);
+        poly_lbl_x_4.setFont(new Font("MesloLGM Nerd Font", Font.PLAIN, 20));
+        poly_lbl_x_4.setBounds(925, 44, 62, 52);
+        decoderSimDisp.add(poly_lbl_x_4);
+        
+        poly_ex_lbl_2 = new JLabel("2");
+        poly_ex_lbl_2.setHorizontalAlignment(SwingConstants.CENTER);
+        poly_ex_lbl_2.setFont(new Font("MesloLGM Nerd Font", Font.PLAIN, 16));
+        poly_ex_lbl_2.setBounds(587, 44, 17, 16);
+        decoderSimDisp.add(poly_ex_lbl_2);
+        
+        poly_ex_lbl_3 = new JLabel("3");
+        poly_ex_lbl_3.setHorizontalAlignment(SwingConstants.CENTER);
+        poly_ex_lbl_3.setFont(new Font("MesloLGM Nerd Font", Font.PLAIN, 16));
+        poly_ex_lbl_3.setBounds(836, 45, 17, 16);
+        decoderSimDisp.add(poly_ex_lbl_3);
+        
+        poly_ex_lbl_4 = new JLabel("4");
+        poly_ex_lbl_4.setHorizontalAlignment(SwingConstants.CENTER);
+        poly_ex_lbl_4.setFont(new Font("MesloLGM Nerd Font", Font.PLAIN, 16));
+        poly_ex_lbl_4.setBounds(970, 45, 17, 16);
+        decoderSimDisp.add(poly_ex_lbl_4);
+        
+        r0_label = new JLabel("Register 0");
+        r0_label.setHorizontalAlignment(SwingConstants.CENTER);
+        r0_label.setFont(new Font("MesloLGM Nerd Font", Font.BOLD, 13));
+        r0_label.setBounds(235, 274, 90, 16);
+        decoderSimDisp.add(r0_label);
+        
+        r1_label = new JLabel("Register 1");
+        r1_label.setHorizontalAlignment(SwingConstants.CENTER);
+        r1_label.setFont(new Font("MesloLGM Nerd Font", Font.BOLD, 13));
+        r1_label.setBounds(433, 274, 90, 16);
+        decoderSimDisp.add(r1_label);
+        
+        r2_label = new JLabel("Register 2");
+        r2_label.setHorizontalAlignment(SwingConstants.CENTER);
+        r2_label.setFont(new Font("MesloLGM Nerd Font", Font.BOLD, 13));
+        r2_label.setBounds(632, 274, 90, 16);
+        decoderSimDisp.add(r2_label);
+        
+        r3_label = new JLabel("Register 3");
+        r3_label.setHorizontalAlignment(SwingConstants.CENTER);
+        r3_label.setFont(new Font("MesloLGM Nerd Font", Font.BOLD, 13));
+        r3_label.setBounds(912, 274, 90, 16);
+        decoderSimDisp.add(r3_label);
+        
+        xor_1_label = new JLabel("XOR");
+        xor_1_label.setHorizontalAlignment(SwingConstants.CENTER);
+        xor_1_label.setFont(new Font("MesloLGM Nerd Font", Font.BOLD, 13));
+        xor_1_label.setBounds(94, 274, 90, 16);
+        decoderSimDisp.add(xor_1_label);
+        
+        xor_2_label = new JLabel("XOR");
+        xor_2_label.setHorizontalAlignment(SwingConstants.CENTER);
+        xor_2_label.setFont(new Font("MesloLGM Nerd Font", Font.BOLD, 13));
+        xor_2_label.setBounds(775, 274, 90, 16);
+        decoderSimDisp.add(xor_2_label);
+        
+        r0_status_disp = new JLabel("holds");
+        r0_status_disp.setHorizontalAlignment(SwingConstants.CENTER);
+        r0_status_disp.setFont(new Font("MesloLGM Nerd Font", Font.BOLD, 16));
+        r0_status_disp.setBounds(235, 410, 90, 16);
+        decoderSimDisp.add(r0_status_disp);
+        
+        r1_status_disp = new JLabel("holds");
+        r1_status_disp.setHorizontalAlignment(SwingConstants.CENTER);
+        r1_status_disp.setFont(new Font("MesloLGM Nerd Font", Font.BOLD, 16));
+        r1_status_disp.setBounds(433, 411, 90, 16);
+        decoderSimDisp.add(r1_status_disp);
+        
+        r2_status_disp = new JLabel("holds");
+        r2_status_disp.setHorizontalAlignment(SwingConstants.CENTER);
+        r2_status_disp.setFont(new Font("MesloLGM Nerd Font", Font.BOLD, 16));
+        r2_status_disp.setBounds(632, 411, 90, 16);
+        decoderSimDisp.add(r2_status_disp);
+        
+        r3_status_disp = new JLabel("holds");
+        r3_status_disp.setHorizontalAlignment(SwingConstants.CENTER);
+        r3_status_disp.setFont(new Font("MesloLGM Nerd Font", Font.BOLD, 16));
+        r3_status_disp.setBounds(912, 411, 90, 16);
+        decoderSimDisp.add(r3_status_disp);
+        
+        bitstream_disp = new JLabel("10000110101");
+        bitstream_disp.setHorizontalAlignment(SwingConstants.CENTER);
+        bitstream_disp.setFont(new Font("MesloLGM Nerd Font", Font.BOLD, 16));
+        bitstream_disp.setBounds(11, 530, 160, 16);
+        decoderSimDisp.add(bitstream_disp);
+
+        JLabel titleLabel = new JLabel("Cyclic Code Decoder");
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Neutraface 2 Text", Font.BOLD, 36));
+        titleLabel.setBounds(238, 21, 889, 63);
+        decodePanelDisp.add(titleLabel);
+
+        backToEncoderBtn = new JButton("Back to Encoder");
+        backToEncoderBtn.setBounds(62, 32, 165, 42);
+        decodePanelDisp.add(backToEncoderBtn);
+    }
+
+    private void addFunctionality() {
+        showDecoderBtn.addActionListener(e -> {
+            CardLayout cards = (CardLayout) frame.getContentPane().getLayout();
+            cards.show(frame.getContentPane(), "decoding");
+        });
+
+        backToEncoderBtn.addActionListener(e -> {
+            CardLayout cards = (CardLayout) frame.getContentPane().getLayout();
+            cards.show(frame.getContentPane(), "name_293514128711250");
+        });
+
+        // Attach decoder clock-step and fast-forward logic here when ready.
 
 	    enterMsgTxtField.addActionListener(new ActionListener() {
 
