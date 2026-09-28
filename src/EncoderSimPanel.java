@@ -173,7 +173,7 @@ public class EncoderSimPanel extends CircuitPanel {
 
   
         currentInput =
-            MessageInput.message.charAt(clock) - '0';
+            MessageInput.message.charAt(10-clock);
 
 
         int oldR0 = r0;
