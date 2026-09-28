@@ -1,4 +1,4 @@
-/** Decoder row layout. Add feedback/input connections to match the class circuit. */
+/** Decoder circuit: XOR -> R0 -> R1 -> R2 -> XOR -> R3, with register feedback. */
 public class DecoderSimPanel extends CircuitPanel {
     private static final long serialVersionUID = 1L;
 
@@ -11,5 +11,6 @@ public class DecoderSimPanel extends CircuitPanel {
             new CircuitElement("XOR1", ComponentType.XOR),
             new CircuitElement("R3", ComponentType.REGISTER)
         );
+        setFeedback("R3", 100, "XOR0", "XOR1");
     }
 }
